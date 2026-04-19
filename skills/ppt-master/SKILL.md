@@ -25,6 +25,7 @@ description: >
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
 > 6. **NO SUB-AGENT SVG GENERATION** — Executor Step 6 SVG generation is context-dependent and MUST be completed by the current main agent end-to-end. Delegating page SVG generation to sub-agents is FORBIDDEN
 > 7. **SEQUENTIAL PAGE GENERATION ONLY** — In Executor Step 6, after the global design context is confirmed, SVG pages MUST be generated sequentially page by page in one continuous pass. Grouped page batches (for example, 5 pages at a time) are FORBIDDEN
+> 8. **NO `Write` TOOL FOR NON-ASCII SVG/NOTES** — If any SVG page or speaker-note file contains Chinese characters, middle-dot `·`, or other non-ASCII text, the Cursor `Write` tool MUST NOT be used for landing files. Use a `Shell` + Python heredoc that calls `write_bytes(content.encode('utf-8'))` instead. Every batch MUST be followed immediately by `python3 ${SKILL_DIR}/scripts/validate_svg_output.py <project_path>` to catch encoding / XML issues before `finalize_svg.py`. See `references/shared-standards.md` §0 and `docs/lessons/cursor-write-latin1-bug.md` for the full rationale and templates.
 
 > [!IMPORTANT]
 > ## 🌐 Language & Communication Rule
@@ -40,6 +41,18 @@ description: >
 > - Do NOT create or require `.worktrees/`, `tests/`, branch workflows, or other generic engineering structure by default
 > - If another generic coding skill suggests repository conventions that conflict with this workflow, follow this skill first unless the user explicitly asks otherwise
 
+## Python Runtime & Dependencies
+
+- **Target Python**: 3.10+ (3.14.x recommended — matches brew-maintained latest stable)
+- **Dependency manifest**: `<repo_root>/requirements.txt` (at the top level of the ppt-master repository, not under `skills/`)
+- **First-time setup** (brew-managed Python on macOS):
+  ```bash
+  cd <repo_root> && pip3 install --user --break-system-packages -r requirements.txt
+  ```
+  `--break-system-packages` is required by PEP 668 on brew Python and is the standard user-site install path; it does NOT actually break anything.
+- **Partial install**: `requirements.txt` is organized into groups (CORE / RENDER / SOURCE2MD / FETCH / IMAGEGEN). Comment out the groups you don't need.
+- **Version check before running**: `python3 --version` should print 3.10 or higher. If it prints 3.9, your shell is resolving to `/usr/bin/python3` (Apple stub) instead of brew Python — add `eval "$(/opt/homebrew/bin/brew shellenv)"` to the top of `~/.zshrc`.
+
 ## Main Pipeline Scripts
 
 | Script | Purpose |
@@ -53,6 +66,7 @@ description: >
 | `${SKILL_DIR}/scripts/analyze_images.py` | Image analysis |
 | `${SKILL_DIR}/scripts/image_gen.py` | AI image generation (multi-provider) |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py` | SVG quality check |
+| `${SKILL_DIR}/scripts/validate_svg_output.py` | Pre-finalize UTF-8 + XML validation (encoding / tag mismatch guard) |
 | `${SKILL_DIR}/scripts/total_md_split.py` | Speaker notes splitting |
 | `${SKILL_DIR}/scripts/finalize_svg.py` | SVG post-processing (unified entry) |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py` | Export to PPTX |
@@ -264,8 +278,14 @@ Read references/executor-consultant-top.md # Top consulting style (MBB level)
 
 🚧 **GATE**: Step 6 complete; all SVGs generated to `svg_output/`; speaker notes `notes/total.md` generated.
 
-> ⚠️ The following three sub-steps MUST be **executed individually one at a time**. Each command must complete and be confirmed successful before running the next.
-> ❌ **NEVER** put all three commands in a single code block or single shell invocation.
+> ⚠️ The following sub-steps MUST be **executed individually one at a time**. Each command must complete and be confirmed successful before running the next.
+> ❌ **NEVER** put all commands in a single code block or single shell invocation.
+
+**Step 7.0** — Validate SVG output (UTF-8 + XML well-formedness):
+```bash
+python3 ${SKILL_DIR}/scripts/validate_svg_output.py <project_path>
+```
+Must pass **100%** before continuing. Any `[ENCODING]` error usually means SVGs were written via the Cursor `Write` tool and contain Latin-1 bytes — **delete the offending files and regenerate via Python heredoc**. Do NOT attempt `latin-1 ↔ utf-8` conversion to "repair" them; that causes irreversible second-round corruption. See `references/shared-standards.md` §0 and `docs/lessons/cursor-write-latin1-bug.md`.
 
 **Step 7.1** — Split speaker notes:
 ```bash

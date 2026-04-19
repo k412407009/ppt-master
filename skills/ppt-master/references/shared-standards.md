@@ -4,6 +4,102 @@ Common technical constraints for PPT Master, eliminating cross-role file duplica
 
 ---
 
+## 0. Encoding Safety (READ FIRST — MANDATORY)
+
+> Any SVG / speaker-note file containing Chinese, middle-dot `·`, or other non-ASCII text
+> can be silently corrupted at landing time. This section defines the minimum discipline to
+> avoid that. Violations of §0 have caused full 20-page regeneration in the past. See
+> `docs/lessons/cursor-write-latin1-bug.md` for the full post-mortem.
+
+### 0.1 Rule of landing method
+
+| File content | Required landing method | Forbidden landing method |
+|---|---|---|
+| Pure ASCII (English only, numbers, symbols) | `Write` tool OR Python heredoc — both fine | — |
+| Contains Chinese / Japanese / Korean / Arabic / any CJK | **Python heredoc with `write_bytes(content.encode('utf-8'))`** | `Write` tool (may silently encode some characters as Latin-1 single bytes) |
+| Contains `·` (U+00B7 middle dot) | **Python heredoc** | `Write` tool (100% triggers the Latin-1 bug) |
+| Contains Chinese punctuation (`，`、`。`、`—`、`…`) | **Python heredoc** | `Write` tool (intermittent) |
+
+**Mnemonic**: 只要文件里有中文或 `·`，就不要用 `Write`。
+
+### 0.2 Approved landing templates
+
+**Template A — single file via Shell + Python heredoc**:
+
+```bash
+python3 <<'PYEOF'
+import pathlib
+content = """<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1280 720\">
+  <text>示例标题 \u00b7 2026</text>
+</svg>"""
+pathlib.Path('/abs/path/to/svg_output/01_cover.svg').write_bytes(content.encode('utf-8'))
+PYEOF
+```
+
+**Template B — batch (recommended for 10+ pages)**:
+
+```python
+import pathlib
+OUT = pathlib.Path('/abs/path/to/svg_output')
+PAGES = {
+    '01_cover.svg': '''<svg ...>...</svg>''',
+    '02_toc.svg':   '''<svg ...>...</svg>''',
+    # ...
+}
+for name, content in PAGES.items():
+    (OUT / name).write_bytes(content.encode('utf-8'))
+    print(f'wrote {name} ({len(content.encode("utf-8"))} bytes)')
+```
+
+**Encoding hints inside the string**:
+
+- Write `·` as `\u00b7` (Unicode escape) to make intent explicit.
+- Write `&` as `&amp;` in SVG/XML literals (otherwise XML parser will reject the file).
+- Write `<` / `>` inside text content as `&lt;` / `&gt;`.
+
+### 0.3 Mandatory validation after every batch landing
+
+After writing any SVG batch, run the project validator. It must pass 100% before
+proceeding to `finalize_svg.py`:
+
+```bash
+python3 ${SKILL_DIR}/scripts/validate_svg_output.py <project_path>
+```
+
+What it checks:
+
+1. **UTF-8 decode** — every `.svg` in `svg_output/` must be valid UTF-8.
+2. **XML well-formedness** — every `.svg` must parse via `ET.parse`.
+3. **Forbidden-byte scan** — reports common Latin-1-only bytes
+   (`0xB7` unescorted, orphan `0xC0`, `0xC1` starts) that indicate Write-tool corruption.
+4. **Tag mismatch heuristic** — warns on `<text>...</tspan>` and `<tspan>...</text>` patterns.
+
+### 0.4 If validation fails — DO NOT attempt byte-level repair
+
+When `validate_svg_output.py` flags files, **do not try any of these**:
+
+- ❌ `file.read_bytes().decode('latin-1').encode('utf-8')` — destroys correct UTF-8 bytes.
+- ❌ `iconv -f latin-1 -t utf-8` — same reason.
+- ❌ Regex replace `\xb7 -> \xc2\xb7` — only works on the middle-dot subset.
+
+The corrupted file is a **mixed byte stream** (part correct UTF-8 + part Latin-1). Any
+uniform recoding destroys one half. **Only valid response**:
+
+1. `rm` the offending file(s).
+2. Re-generate via Template A or Template B above.
+3. Re-run `validate_svg_output.py` until clean.
+
+### 0.5 Applies to all text artifacts, not just SVG
+
+The same rule applies to:
+
+- `notes/total.md` and per-page `notes/*.md`.
+- `design_spec.md` sections with Chinese content (if written from scratch rather than filled from a template).
+- Any `images/image_prompts.md` containing Chinese prompts.
+- Any standalone JSON/YAML/TOML with non-ASCII values.
+
+---
+
 ## 1. SVG Banned Features Blacklist
 
 The following features are **absolutely forbidden** when generating SVGs — PPT export will break if any are used:

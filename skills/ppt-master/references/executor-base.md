@@ -40,6 +40,50 @@ Must output confirmation including: canvas dimensions, body font size, color sch
 
 ---
 
+## 2.5 Encoding & Write-Method Confirmation (Mandatory Step)
+
+> Immediately after §2, before generating the first SVG, the Executor MUST declare how it
+> will land files and MUST perform a landing self-test. This gate exists because the
+> Cursor `Write` tool can silently corrupt Chinese characters and `·` (U+00B7) into
+> Latin-1 single bytes, causing `finalize_svg.py` to crash with `UnicodeDecodeError` on
+> all pages. See `docs/lessons/cursor-write-latin1-bug.md` for the full post-mortem.
+
+### Required output block (Chinese content example)
+
+```markdown
+## 🔤 Encoding & Write-Method Confirmation
+
+- Content language: Chinese (contains Chinese characters / `·` / Chinese punctuation)
+- Landing method: **Shell + Python heredoc** (`Write` tool is FORBIDDEN for this project)
+- Encoding: UTF-8, explicit `write_bytes(content.encode('utf-8'))`
+- Validation after each batch: `python3 ${SKILL_DIR}/scripts/validate_svg_output.py <project_path>`
+- Self-test result: ✅ 1/1 page landed, UTF-8 OK, XML OK
+```
+
+For pure-English content, the Executor may declare `Write` tool as landing method and skip
+the self-test, but the `validate_svg_output.py` gate in §7.0 of SKILL.md still applies.
+
+### Self-test procedure (run once before Page 1)
+
+1. Generate a minimal placeholder SVG containing one `·` and one sentinel Chinese string
+   (e.g., a title reading "编码自检 · OK").
+2. Land it to `svg_output/00_encoding_selftest.svg` via the declared method.
+3. Run `validate_svg_output.py`. Must show `[ENCODING OK]` and `[XML OK]` for the test file.
+4. `rm svg_output/00_encoding_selftest.svg` before starting real generation.
+
+If the self-test fails, **stop** — the environment is not capable of safely writing this
+deck's content. Surface the failure to the user and do NOT proceed.
+
+### Forbidden recovery actions (do not attempt)
+
+| Attempt | Why it breaks | What to do instead |
+|---|---|---|
+| `.decode('latin-1').encode('utf-8')` to "fix" corrupted file | Destroys correct UTF-8 multi-byte runs (every 3-byte CJK char becomes 3 garbage chars × 2 bytes each) | `rm` file, regenerate via heredoc |
+| `iconv -f latin-1 -t utf-8` | Same reason as above | Same remedy |
+| Regex replace `\xb7 → \xc2\xb7` | Only fixes the middle-dot subset; leaves all corrupted CJK unfixed | Same remedy |
+
+---
+
 ## 3. Execution Guidelines
 
 - **Proximity principle**: Place related elements close together to form visual groups; increase spacing between unrelated groups to reinforce logical structure

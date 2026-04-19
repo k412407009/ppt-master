@@ -140,6 +140,38 @@ def finalize_project(
         safe_print(f"[DIR] Project: {project_dir.name}")
         safe_print(f"[FILE] {len(svg_files)} SVG file(s)")
 
+    # Step 0: Pre-finalize validation (UTF-8 + XML + Write-tool bug signatures).
+    # Running the validator here is cheap and prevents every downstream failure
+    # caused by the Cursor `Write` tool emitting Latin-1 bytes in CJK content.
+    # See docs/lessons/cursor-write-latin1-bug.md.
+    try:
+        from validate_svg_output import validate_file  # type: ignore
+    except ImportError:
+        validate_file = None  # type: ignore
+
+    if validate_file is not None and not dry_run:
+        if not quiet:
+            safe_print("[0/6] Pre-finalize validation (UTF-8 + XML)...")
+        failures = []
+        for svg_file in svg_files:
+            report = validate_file(svg_file)
+            if not report.passed:
+                failures.append(report)
+        if failures:
+            safe_print(f"[ERROR] {len(failures)} file(s) failed pre-finalize validation:")
+            for report in failures:
+                safe_print(f"   - {report.path.name}")
+                for err in report.errors:
+                    safe_print(f"       {err}")
+            safe_print("")
+            safe_print("Run `python3 scripts/validate_svg_output.py <project_path>` for full report.")
+            safe_print("Most common cause: Cursor `Write` tool encoded CJK / middle-dot as Latin-1.")
+            safe_print("Remedy: delete the failing files and regenerate via Python heredoc.")
+            safe_print("See docs/lessons/cursor-write-latin1-bug.md.")
+            return False
+        if not quiet:
+            safe_print(f"      {len(svg_files)} file(s) passed UTF-8 + XML validation")
+
     if dry_run:
         safe_print("[PREVIEW] Preview mode, no operations will be performed")
         return True
