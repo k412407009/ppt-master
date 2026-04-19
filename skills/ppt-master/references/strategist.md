@@ -166,12 +166,15 @@ Selection principle: Font size is based on **content density**, not design style
 |--------|----------|-------------------|
 | **A** | No images | Data reports, process documentation |
 | **B** | User-provided | Has existing image assets |
-| **C** | AI-generated | Custom illustrations, backgrounds needed |
-| **D** | Placeholders | Images to be added later |
+| **C** | AI-generated (text-to-image) | Custom illustrations, backgrounds needed |
+| **D** | **Game asset auto-collection** (Step 4.5) | Game-research / game-design PPTs that reference real titles — pulls store screenshots + gameplay video frames + AI labels, with closest-reference i2i / collage when prototypes don't fully cover a needed scene |
+| **E** | Placeholders | Images to be added later |
 
 **When selection includes B**, you must run `python3 scripts/analyze_images.py <project_path>/images` before outputting the spec, and integrate scan results into the image resource list.
 
-**When B/C/D is selected**, add an image resource list to the spec:
+**When selection includes D** (Game asset auto-collection): after outputting the spec, the workflow proceeds to **Step 4.5** (`references/game-asset-collector.md`) which uses `scripts/game_assets/fetch_game_assets.py` (store screenshots + gameplay video frames + Doubao Vision labeling) and `scripts/game_assets/image_remix.py` (Seedream image-to-image + multi-image collage with describe-then-t2i fallback) to land prototype references under `<project>/images/_game_assets/<game>/` and emit paste-ready Markdown into `<project>/images/_game_assets_meta/<game>.image_resource_list.md`. Strategist should still draft the §VIII table with explicit per-slide **Purpose** entries; Step 4.5 fills in the **Filename / Dimensions / Ratio / Type / Status / Notes** columns automatically.
+
+**When B/C/D/E is selected**, add an image resource list to the spec:
 
 | Column | Description |
 |--------|-------------|
@@ -221,7 +224,9 @@ Core logic: The layout container's aspect ratio must closely match the image's o
 
 > **Multi-image slides**: When multiple images appear on one page, use the grid formulas in the "Multi-Image Layout" section of `references/image-layout-spec.md`.
 
-> **Pipeline handoff**: When C) AI generation is selected, after outputting the design spec, prompt the user to invoke Image_Generator. Once images are collected in `images/`, proceed to Executor.
+> **Pipeline handoff**:
+> - When **C) AI generation** is selected, after outputting the design spec proceed to Image_Generator (Step 5). Once images are collected in `images/`, proceed to Executor.
+> - When **D) Game asset auto-collection** is selected, after outputting the design spec proceed to **Game Asset Collection (Step 4.5)** — see `references/game-asset-collector.md`. C and D may both be triggered; in that case Step 4.5 runs first, then Step 5.
 
 ### Visualization Reference (Non-blocking — Strategist recommends, no user confirmation needed)
 

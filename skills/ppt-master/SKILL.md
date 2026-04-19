@@ -11,7 +11,9 @@ description: >
 
 > AI-driven multi-format SVG content generation system. Converts source documents into high-quality SVG pages through multi-role collaboration and exports to PPTX.
 
-**Core Pipeline**: `Source Document → Create Project → Template Option → Strategist → [Image_Generator] → Executor → Post-processing → Export`
+**Core Pipeline**: `Source Document → Create Project → Template Option → Strategist → [Game Asset Collection] → [Image_Generator] → Executor → Post-processing → Export`
+
+> The `[Game Asset Collection]` step (Step 4.5) is conditional — runs only when Strategist's "Image Usage Confirmation" includes option **D) Game asset auto-collection** (typically for game-design / game-research PPTs that reference real titles).
 
 > [!CAUTION]
 > ## 🚨 Global Execution Discipline (MANDATORY)
@@ -64,7 +66,9 @@ description: >
 | `${SKILL_DIR}/scripts/source_to_md/web_to_md.cjs` | Node.js fallback for WeChat / TLS-blocked sites (use only if `curl_cffi` is unavailable; `web_to_md.py` now handles WeChat when `curl_cffi` is installed) |
 | `${SKILL_DIR}/scripts/project_manager.py` | Project init / validate / manage |
 | `${SKILL_DIR}/scripts/analyze_images.py` | Image analysis |
-| `${SKILL_DIR}/scripts/image_gen.py` | AI image generation (multi-provider) |
+| `${SKILL_DIR}/scripts/image_gen.py` | AI image generation (multi-provider, text-to-image) |
+| `${SKILL_DIR}/scripts/game_assets/fetch_game_assets.py` | Game prototype reference collector — store screenshots + gameplay video frame extraction + AI labeling + Image Resource List emitter |
+| `${SKILL_DIR}/scripts/game_assets/image_remix.py` | Image-to-image (Seedream) + multi-image collage (PIL) + describe-then-t2i fallback for closest-reference restyling |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py` | SVG quality check |
 | `${SKILL_DIR}/scripts/validate_svg_output.py` | Pre-finalize UTF-8 + XML validation (encoding / tag mismatch guard) |
 | `${SKILL_DIR}/scripts/total_md_split.py` | Speaker notes splitting |
@@ -216,9 +220,63 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 
 ---
 
-### Step 5: Image_Generator Phase (Conditional)
+### Step 4.5: Game Asset Collection Phase (Conditional)
 
 🚧 **GATE**: Step 4 complete; Design Specification & Content Outline generated and user confirmed.
+
+> **Trigger condition**: Image approach includes "**D) Game asset auto-collection**" (typical for game-research / game-design PPTs that reference real titles like Storage Auctions, DREDGE, Last Asylum, etc.). If not triggered, skip directly to Step 5 (or Step 6 if neither image phase is triggered).
+
+Read `references/game-asset-collector.md` for the full role definition.
+
+This phase acquires **prototype reference visuals** in priority order:
+1. **Store screenshots** (App Store + Google Play + Steam, with Tavily Extract fallback)
+2. **Gameplay video frame extraction** (yt-dlp pulls YouTube/Bilibili clips → ffmpeg extracts frames → pHash dedup → Doubao Vision labels into 12 scene categories with smart-quota early-stop)
+3. **Closest-reference image-to-image / collage** (when 1 + 2 don't yield the exact scene needed, restyle the closest existing prototype with Seedream i2i, or stitch several together and restyle the composite)
+
+**Per-game collection** (run once per reference game discovered in §VIII / §IX of `design_spec.md`):
+```bash
+python3 ${SKILL_DIR}/scripts/game_assets/fetch_game_assets.py "<game name>" \
+    --project <project_path> \
+    --steam-id <id?> --appstore-id <id?> --gplay-id <pkg?> \
+    --max-videos 2 --label
+```
+
+Outputs land in `<project_path>/images/_game_assets/<game>/` (frames, store shots, `labels.json`, `metadata.json`) and `<project_path>/images/_game_assets_meta/<game>.image_resource_list.md` (paste-ready Markdown table for `design_spec.md` §VIII).
+
+**Closest-reference restyling** (when stores + videos don't cover a needed scene):
+```bash
+# Single ref → Seedream i2i restyle (auto-falls-back to describe-then-t2i if i2i unsupported)
+python3 ${SKILL_DIR}/scripts/game_assets/image_remix.py i2i ref.jpg \
+    --prompt "..." --aspect 16:9 -o variant.jpg
+
+# Multi-ref → PIL collage → i2i restyle in one call
+python3 ${SKILL_DIR}/scripts/game_assets/image_remix.py remix r1.jpg r2.jpg r3.jpg \
+    --prompt "..." --layout hstrip --aspect 21:9 -o hero.jpg
+
+# Pure offline collage (no API)
+python3 ${SKILL_DIR}/scripts/game_assets/image_remix.py collage r1.jpg r2.jpg r3.jpg r4.jpg \
+    --layout 2x2 --gap 12 -o composite.jpg
+```
+
+> ⚠️ **Image handling rule still applies**: the AI must NEVER directly read, open, or view image files. All image information after this phase comes from `analyze_images.py`, `labels.json`, or the `image_resource_list.md` files emitted here.
+
+> ⚠️ **Main-agent only rule**: Game Asset Collection MUST be executed by the current main agent. Do NOT delegate the per-game `fetch_game_assets.py` / `image_remix.py` calls to sub-agents — the choice of which games, scenes, and closest-references depends on full upstream conversation context.
+
+After collection, append all emitted `image_resource_list.md` tables into `design_spec.md` §VIII (or as §VIII.b "Auto-collected references" if §VIII was already finalized) and fill the **Purpose** column per slide before proceeding.
+
+**✅ Checkpoint — Confirm assets and resource list are ready, proceed to Step 5 (or Step 6 if AI generation is not also triggered)**:
+```markdown
+## ✅ Game Asset Collection Phase Complete
+- [x] Per-game asset directories under images/_game_assets/
+- [x] Per-game image_resource_list.md emitted
+- [x] design_spec.md §VIII / §VIII.b updated
+```
+
+---
+
+### Step 5: Image_Generator Phase (Conditional)
+
+🚧 **GATE**: Step 4 complete (and Step 4.5 complete if triggered); Design Specification & Content Outline generated and user confirmed.
 
 > **Trigger condition**: Image approach includes "AI generation". If not triggered, skip directly to Step 6 (Step 6 GATE must still be satisfied).
 
@@ -331,6 +389,7 @@ Before switching roles, you **MUST first read** the corresponding reference file
 | Canvas format specification | `references/canvas-formats.md` |
 | Image layout specification | `references/image-layout-spec.md` |
 | SVG image embedding | `references/svg-image-embedding.md` |
+| Game asset collector (Step 4.5) | `references/game-asset-collector.md` |
 
 ---
 

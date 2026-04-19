@@ -55,3 +55,26 @@ curl-cffi>=0.6
 # ==========================
 openai>=1.0             # backend_openai
 google-genai>=0.3       # imported as google.genai — Gemini image backend
+
+# ==========================
+# GAME_ASSETS — required by scripts/game_assets/* (Step 4.5 Game Asset Collection)
+#
+# Triggered when Strategist's Image Usage Confirmation includes
+# option D) Game asset auto-collection (see references/game-asset-collector.md).
+#
+# Pure-Python deps:
+# ==========================
+google-play-scraper>=1.2  # store metadata + screenshots from Google Play
+yt-dlp>=2024.1            # YouTube + Bilibili gameplay video downloader
+
+# System binaries (install separately, not via pip):
+#   ffmpeg               # frame extraction + scene detection
+#                        # Windows: winget install ffmpeg
+#                        # macOS:   brew install ffmpeg
+#                        # Linux:   apt install ffmpeg / dnf install ffmpeg
+#
+# Optional API keys (set in .env or current environment):
+#   ARK_API_KEY          # Doubao Vision (frame labeling) + Seedream (i2i / t2i)
+#                        # alias: VOLCENGINE_API_KEY also works
+#   TAVILY_API_KEY       # store-page screenshot fallback when iTunes / Google Play
+#                        # APIs return no screenshots
