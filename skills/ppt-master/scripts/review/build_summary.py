@@ -42,6 +42,17 @@ VERDICT_LABEL = {
 VERDICT_RANK = {"pass": 0, "conditional_pass": 1, "not_pass": 2}
 
 
+# JSON 内部保留 P/S1/D8 等代号 (机器可读外键), 但所有面向人的产物一律展开成全名。
+
+def _rev_label(rev: dict) -> str:
+    """评委显示标签: '资深制作人 (15年)'。"""
+    return f"{rev['name']} ({rev['years']}年)"
+
+
+def _rev_lookup(reviewers: list[dict]) -> dict[str, dict]:
+    return {r["id"]: r for r in reviewers}
+
+
 def _avg_per_dim(scores: dict[str, dict[str, int]]) -> dict[str, float]:
     out = {}
     for d in DIMENSIONS:
@@ -85,10 +96,14 @@ def main(argv: list[str]) -> int:
     for d in all_data:
         print(f"    - {d['project']} → {d['__source'].name}")
 
+    # 取第一份 review 里的 reviewers 作为评委会展示 (5 人在所有项目里固定相同)
+    reviewers_for_header = all_data[0].get("reviewers", [])
+    rev_header = " / ".join(_rev_label(r) for r in reviewers_for_header) if reviewers_for_header else "-"
+
     lines: list[str] = []
     lines.append("# Review Board · 跨项目评审汇总")
     lines.append("")
-    lines.append(f"> 涵盖 {len(all_data)} 个项目, 评委会 5 人 (P / S1 / S2 / O1 / O2)")
+    lines.append(f"> 涵盖 {len(all_data)} 个项目, 评委会 5 人: {rev_header}")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -114,7 +129,7 @@ def main(argv: list[str]) -> int:
     lines.append("|" + "|".join(["---"] * len(header)) + "|")
     avg_by_proj = {d["project"]: _avg_per_dim(d["scores"]) for d in all_data}
     for dim_id, dim_name in DIMENSIONS.items():
-        row = [f"**{dim_id}** {dim_name}"]
+        row = [f"**{dim_name}**"]
         for d in all_data:
             v = avg_by_proj[d["project"]][dim_id]
             mark = ""
@@ -147,7 +162,7 @@ def main(argv: list[str]) -> int:
         lines.append("|---|---|---|")
         for dim_id, projs in common_dims.items():
             lines.append(
-                f"| **{dim_id}** {DIMENSIONS[dim_id]} | {' / '.join(projs)} | "
+                f"| **{DIMENSIONS[dim_id]}** | {' / '.join(projs)} | "
                 f"建议 ppt-master skill 在 strategist.md 增加该维度专项 checklist |"
             )
     lines.append("")
@@ -165,6 +180,7 @@ def main(argv: list[str]) -> int:
             lines.append("")
             continue
         has_p0 = True
+        rev_lookup = _rev_lookup(d.get("reviewers", []))
         lines.append(f"### {d['project']} ({len(p0_issues)} 项 P0)")
         lines.append("")
         lines.append("| ID | 评委 | 影响页 | 问题 | 改动建议/最优解 |")
@@ -173,8 +189,10 @@ def main(argv: list[str]) -> int:
             advice = q.get("suggestion") or q.get("best_answer") or "-"
             advice = advice.replace("\n", " ").replace("|", "\\|")
             question = q["question"].replace("\n", " ").replace("|", "\\|")
+            rev = rev_lookup.get(q["reviewer"], {})
+            rev_str = _rev_label(rev) if rev else q["reviewer"]
             lines.append(
-                f"| {q['id']} | {q['reviewer']} | {q.get('page', '-')} | {question} | {advice} |"
+                f"| {q['id']} | {rev_str} | {q.get('page', '-')} | {question} | {advice} |"
             )
         lines.append("")
 
@@ -201,7 +219,7 @@ def main(argv: list[str]) -> int:
         lines.append("")
         for dim_id, projs in common_dims.items():
             lines.append(
-                f"- **{dim_id}** {DIMENSIONS[dim_id]} → "
+                f"- **{DIMENSIONS[dim_id]}** → "
                 f"在 `references/strategist.md` 八问八答里加一项专项校验, 命中项目: {' / '.join(projs)}"
             )
         lines.append("")

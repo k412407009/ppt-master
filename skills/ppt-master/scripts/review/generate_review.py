@@ -60,6 +60,24 @@ PRIORITY_COLOR = {
 }
 
 
+# ============== display helpers ==============
+# JSON 内部保留 P/S1/D8 等代号 (机器可读外键), 但所有面向人的产物一律展开成全名。
+
+def _rev_label(rev: dict) -> str:
+    """评委显示标签: '资深制作人 (15年)'。"""
+    return f"{rev['name']} ({rev['years']}年)"
+
+
+def _rev_short(rev: dict) -> str:
+    """评委窄列标签 (Excel/Word 表头, 用换行分行): '资深制作人\\n15年'。"""
+    return f"{rev['name']}\n{rev['years']}年"
+
+
+def _rev_lookup(reviewers: list[dict]) -> dict[str, dict]:
+    """{ 'P': {...}, 'S1': {...}, ... } 方便按代号反查全名。"""
+    return {r["id"]: r for r in reviewers}
+
+
 # ============== docx helpers ==============
 
 def _set_cell_bg(cell, hex_color: str) -> None:
@@ -107,7 +125,7 @@ def _scores_table(doc: Document, scores: dict[str, dict[str, int]], reviewers: l
     header[0].text = "维度"
     _set_cell_bg(header[0], "1A2C5C")
     for i, rev in enumerate(reviewers):
-        header[1 + i].text = f"{rev['id']}\n{rev['name']}"
+        header[1 + i].text = _rev_short(rev)
         _set_cell_bg(header[1 + i], "1A2C5C")
     header[-1].text = "均分"
     _set_cell_bg(header[-1], "1A2C5C")
@@ -125,7 +143,7 @@ def _scores_table(doc: Document, scores: dict[str, dict[str, int]], reviewers: l
     col_avgs: list[float] = []
     for r_idx, (dim_id, dim_name) in enumerate(DIMENSIONS.items(), start=1):
         row = table.rows[r_idx].cells
-        row[0].text = f"{dim_id}\n{dim_name}"
+        row[0].text = dim_name
         scores_for_dim = []
         for i, rev in enumerate(reviewers):
             v = scores.get(rev["id"], {}).get(dim_id, 0)
@@ -196,10 +214,10 @@ def _build_docx(data: dict[str, Any], out_path: Path) -> None:
 
     # ---- 评委会 ----
     _add_heading(doc, "I. 评委会成员", level=1)
-    rev_table = doc.add_table(rows=1 + len(data["reviewers"]), cols=4)
+    rev_table = doc.add_table(rows=1 + len(data["reviewers"]), cols=3)
     rev_table.style = "Light Grid Accent 1"
     hdr = rev_table.rows[0].cells
-    for i, name in enumerate(["代号", "角色", "工龄", "评审视角"]):
+    for i, name in enumerate(["评委", "工龄", "评审视角"]):
         hdr[i].text = name
         _set_cell_bg(hdr[i], "1A2C5C")
         for p in hdr[i].paragraphs:
@@ -209,10 +227,9 @@ def _build_docx(data: dict[str, Any], out_path: Path) -> None:
                 run.font.color.rgb = RGBColor(255, 255, 255)
     for i, rev in enumerate(data["reviewers"], start=1):
         cells = rev_table.rows[i].cells
-        cells[0].text = rev["id"]
-        cells[1].text = rev["name"]
-        cells[2].text = f"{rev['years']} 年"
-        cells[3].text = rev["perspective"]
+        cells[0].text = rev["name"]
+        cells[1].text = f"{rev['years']} 年"
+        cells[2].text = rev["perspective"]
         for c in cells:
             for p in c.paragraphs:
                 for run in p.runs:
@@ -236,18 +253,23 @@ def _build_docx(data: dict[str, Any], out_path: Path) -> None:
     # ---- 逐评委意见 ----
     doc.add_page_break()
     _add_heading(doc, "III. 逐评委意见", level=1)
+    rev_lookup = _rev_lookup(data["reviewers"])
     issues_by_rev: dict[str, list[dict]] = {r["id"]: [] for r in data["reviewers"]}
     for issue in data["issues"]:
         issues_by_rev.setdefault(issue["reviewer"], []).append(issue)
 
-    for rev in data["reviewers"]:
-        _add_heading(doc, f"III.{rev['id']} {rev['name']} ({rev['years']} 年)", level=2)
+    for idx, rev in enumerate(data["reviewers"], start=1):
+        _add_heading(doc, f"III.{idx} {_rev_label(rev)}", level=2)
         _add_para(doc, f"背景: {rev.get('background', '-')}", size=10)
         _add_para(doc, f"视角: {rev['perspective']}", size=10)
 
         rev_scores = data["scores"].get(rev["id"], {})
-        score_str = " / ".join(f"{d}:{rev_scores.get(d, '-')}" for d in DIMENSIONS)
-        _add_para(doc, f"打分: {score_str}", size=10, bold=True)
+        # 9 维度打分一行太长, 拆 3 行 (每行 3 维度), 全部用维度全名
+        dim_items = list(DIMENSIONS.items())
+        for chunk_start in range(0, len(dim_items), 3):
+            chunk = dim_items[chunk_start:chunk_start + 3]
+            line = "  ·  ".join(f"{name}: {rev_scores.get(did, '-')}" for did, name in chunk)
+            _add_para(doc, ("打分:  " if chunk_start == 0 else "       ") + line, size=10, bold=True)
 
         rev_issues = issues_by_rev.get(rev["id"], [])
         if not rev_issues:
@@ -278,9 +300,10 @@ def _build_docx(data: dict[str, Any], out_path: Path) -> None:
             continue
         _add_heading(doc, f"IV.{prio} ({len(bucket)} 项)", level=2)
         for q in bucket:
+            rev_name = rev_lookup[q["reviewer"]]["name"] if q["reviewer"] in rev_lookup else q["reviewer"]
             _add_para(
                 doc,
-                f"[{q['id']}] @ {q.get('page','-')} — {q['question']} → {q['suggestion']} (评委 {q['reviewer']})",
+                f"[{q['id']}] @ {q.get('page','-')} — {q['question']} → {q['suggestion']} (评委: {rev_name})",
                 size=10,
             )
 
@@ -311,10 +334,12 @@ THICK_BORDER = Border(
 def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
     wb = Workbook()
 
+    rev_lookup = _rev_lookup(data["reviewers"])
+
     # ---- Sheet 1: Issues ----
     ws = wb.active
     ws.title = "Issues"
-    headers = ["ID", "评委", "维度", "维度名", "类型", "优先级", "页号/影响", "问题", "改动建议/最优解", "答辩话术"]
+    headers = ["ID", "评委", "维度", "类型", "优先级", "页号/影响", "问题", "改动建议/最优解", "答辩话术"]
     for c, h in enumerate(headers, start=1):
         cell = ws.cell(row=1, column=c, value=h)
         cell.font = Font(bold=True, color="FFFFFF", name="Microsoft YaHei")
@@ -331,11 +356,11 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
                 f"[最优解] {q.get('best_answer', '-')}"
             )
             tps = "\n".join(f"• {t}" for t in q.get("talking_points", []))
+        rev = rev_lookup.get(q["reviewer"], {})
         row_vals = [
             q["id"],
-            q["reviewer"],
-            q["dimension"],
-            DIMENSIONS.get(q["dimension"], "-"),
+            _rev_label(rev) if rev else q["reviewer"],
+            DIMENSIONS.get(q["dimension"], q["dimension"]),
             "客观" if q["type"] == "O" else "主观",
             q["priority"],
             q.get("page", "-"),
@@ -349,8 +374,9 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
             cell.border = THICK_BORDER
         prio_color = PRIORITY_COLOR.get(q["priority"], "FFFFFF")
-        ws.cell(row=r, column=6).fill = PatternFill("solid", fgColor=prio_color)
-    widths = [8, 8, 6, 18, 6, 8, 14, 50, 60, 40]
+        ws.cell(row=r, column=5).fill = PatternFill("solid", fgColor=prio_color)
+    # 列宽: ID / 评委 / 维度 / 类型 / 优先级 / 页号/影响 / 问题 / 改动建议 / 答辩话术
+    widths = [8, 22, 22, 6, 8, 16, 50, 60, 40]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = "A2"
@@ -358,20 +384,21 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
     # ---- Sheet 2: Scores ----
     ws2 = wb.create_sheet("Scores")
     rev_ids = [r["id"] for r in data["reviewers"]]
-    headers2 = ["维度ID", "维度"] + rev_ids + ["均分"]
+    rev_col_labels = [_rev_short(r) for r in data["reviewers"]]  # 表头展开成全名+工龄
+    headers2 = ["维度"] + rev_col_labels + ["均分"]
     for c, h in enumerate(headers2, start=1):
         cell = ws2.cell(row=1, column=c, value=h)
         cell.font = Font(bold=True, color="FFFFFF", name="Microsoft YaHei")
         cell.fill = PatternFill("solid", fgColor="1A2C5C")
-        cell.alignment = Alignment(horizontal="center")
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = THICK_BORDER
+    ws2.row_dimensions[1].height = 36  # 表头双行高度
 
     col_sums: dict[str, list[int]] = {rid: [] for rid in rev_ids}
     for r, (dim_id, dim_name) in enumerate(DIMENSIONS.items(), start=2):
-        ws2.cell(row=r, column=1, value=dim_id).font = Font(bold=True, name="Microsoft YaHei")
-        ws2.cell(row=r, column=2, value=dim_name).font = Font(name="Microsoft YaHei")
+        ws2.cell(row=r, column=1, value=dim_name).font = Font(bold=True, name="Microsoft YaHei")
         scores_row = []
-        for c, rid in enumerate(rev_ids, start=3):
+        for c, rid in enumerate(rev_ids, start=2):
             v = data["scores"].get(rid, {}).get(dim_id, 0)
             cell = ws2.cell(row=r, column=c, value=v)
             cell.alignment = Alignment(horizontal="center")
@@ -387,11 +414,10 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
 
     # 评委均分行
     total_row = 2 + len(DIMENSIONS)
-    ws2.cell(row=total_row, column=1, value="-")
-    cell = ws2.cell(row=total_row, column=2, value="评委均分")
+    cell = ws2.cell(row=total_row, column=1, value="评委均分")
     cell.font = Font(bold=True, name="Microsoft YaHei")
     cell.fill = PatternFill("solid", fgColor="FFD700")
-    for c, rid in enumerate(rev_ids, start=3):
+    for c, rid in enumerate(rev_ids, start=2):
         rs = col_sums[rid]
         avg = round(sum(rs) / len(rs), 2) if rs else 0
         cell = ws2.cell(row=total_row, column=c, value=avg)
@@ -403,11 +429,10 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
     cell.alignment = Alignment(horizontal="center")
     cell.fill = PatternFill("solid", fgColor="FFD700")
 
-    ws2.column_dimensions["A"].width = 8
-    ws2.column_dimensions["B"].width = 24
-    for c in range(3, len(headers2) + 1):
-        ws2.column_dimensions[get_column_letter(c)].width = 10
-    ws2.freeze_panes = "C2"
+    ws2.column_dimensions["A"].width = 26
+    for c in range(2, len(headers2) + 1):
+        ws2.column_dimensions[get_column_letter(c)].width = 16
+    ws2.freeze_panes = "B2"
 
     # ---- Sheet 3: Action_Items ----
     ws3 = wb.create_sheet("Action_Items")
@@ -423,14 +448,15 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
     for prio in ["P0", "P1", "P2"]:
         bucket = [q for q in data["issues"] if q["priority"] == prio and q["type"] == "O"]
         for q in bucket:
+            rev = rev_lookup.get(q["reviewer"], {})
             row_vals = [
                 prio,
                 q["id"],
                 q.get("page", "-"),
                 q["question"],
                 q.get("suggestion", "-"),
-                q["reviewer"],
-                DIMENSIONS.get(q["dimension"], "-"),
+                _rev_label(rev) if rev else q["reviewer"],
+                DIMENSIONS.get(q["dimension"], q["dimension"]),
                 q.get("est_hours", ""),
                 q.get("owner", ""),
             ]
@@ -441,7 +467,8 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
                 cell.border = THICK_BORDER
             ws3.cell(row=rownum, column=1).fill = PatternFill("solid", fgColor=PRIORITY_COLOR[prio])
             rownum += 1
-    a_widths = [8, 8, 14, 50, 60, 8, 16, 10, 14]
+    # 列宽: 优先级 / ID / 页号 / 问题 / 改动建议 / 评委 / 维度 / 预估工时 / Owner
+    a_widths = [8, 8, 16, 50, 60, 22, 22, 10, 14]
     for i, w in enumerate(a_widths, start=1):
         ws3.column_dimensions[get_column_letter(i)].width = w
     ws3.freeze_panes = "A2"
@@ -452,10 +479,11 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
 # ============== subjective md ==============
 
 def _build_subjective_md(data: dict[str, Any], out_path: Path) -> None:
+    rev_lookup = _rev_lookup(data["reviewers"])
     lines = [
         f"# {data['project']} · 主观问题最优解 (Subjective Responses)",
         "",
-        f"> 评委会 = {', '.join(r['id']+'·'+r['name'] for r in data['reviewers'])}",
+        f"> 评委会 = {' / '.join(_rev_label(r) for r in data['reviewers'])}",
         f"> 评审日期: {data['review_date']}    裁决: {VERDICT_LABEL.get(data['verdict'], data['verdict'])}",
         "",
         "本文档仅含主观/无定论问题, 提供评委倾向 + PPT 当前方案的最优解辩护 + 答辩话术。",
@@ -469,10 +497,12 @@ def _build_subjective_md(data: dict[str, Any], out_path: Path) -> None:
         lines.append("(本次评审无主观问题, 全部为可执行客观项)")
     else:
         for q in s_issues:
+            rev = rev_lookup.get(q["reviewer"], {})
+            rev_str = _rev_label(rev) if rev else q["reviewer"]
             lines.extend([
                 f"## {q['id']} · {q['question']}",
                 "",
-                f"- **评委**: {q['reviewer']} · **维度**: {DIMENSIONS.get(q['dimension'], q['dimension'])} · **优先级**: {q['priority']} · **影响**: {q.get('page', '-')}",
+                f"- **评委**: {rev_str} · **维度**: {DIMENSIONS.get(q['dimension'], q['dimension'])} · **优先级**: {q['priority']} · **影响**: {q.get('page', '-')}",
                 "",
                 f"**评委倾向**:  {q.get('subjective_position', '-')}",
                 "",
