@@ -74,9 +74,29 @@
 ### 2. `<project>_review.xlsx` (问题清单 · 给执行)
 
 3 个 sheet:
-- **`Issues`**: 每行 1 个问题 (评委 / 维度 / 类型 O/S / 优先级 / 问题描述 / 改动建议 / 影响页号)
-- **`Scores`**: 5 评委 × 9 维度 打分矩阵 + 平均分 + 加权分
-- **`Action_Items`**: 按 P0/P1/P2 分组的可执行清单 (含 owner / 预估工时 / 截止节点)
+
+- **`Issues`** — 每行 1 个问题, 共 **12 列**: 前 9 列是评审产出 (只读), 后 3 列是**用户决策 (可填)**:
+
+  | 列 | 字段 | 说明 |
+  |---|---|---|
+  | A | ID | Q01-Q18 |
+  | B | 评委 | 全名 + 工龄 (如 "资深制作人 (15年)") |
+  | C | 维度 | D1-D9 全名 |
+  | D | 类型 | 客观 / 主观 |
+  | E | 优先级 | P0/P1/P2 (彩色单元格) |
+  | F | 页号/影响 | Slide 号 |
+  | G | 问题 | 评委原话 |
+  | H | 改动建议/最优解 | O 类含 suggestion; S 类含 [评委倾向] + [最优解] |
+  | I | 答辩话术 | S 类 talking_points |
+  | **J** | **要不要改** | **三选一下拉: 改 / 待定 / 不改. 默认待定 (黄)** |
+  | **K** | **我要做什么** | **行动目标 (What). 留空=按评委原方案; 填=覆盖评委目标** |
+  | **L** | **怎么做** | **具体步骤 (How). 留空=AI 按 K 自动推导; 填=严格按此实施** |
+
+  J 列带**数据验证**(强制下拉)+ **条件格式**(改=绿/待定=黄/不改=灰)+ 表头批注。
+  K/L 两列用于驱动 skill 自动化改 PPT, 见 §VIII。
+
+- **`Scores`** — 5 评委 × 9 维度 打分矩阵 + 每维均分 + 每评委均分 + 整体加权总分
+- **`Action_Items`** — O 类 issue 按 P0/P1/P2 分组, 含 owner / 预估工时
 
 ### 3. `<project>_subjective_responses.md` (主观问题最优解 · 给制作人)
 
@@ -91,13 +111,24 @@
 
 ---
 
-## V. 跨项目汇总: `review-summary.md`
+## V. 跨项目汇总: `review-summary.md` + `projects_comparison.xlsx`
 
-放在 `F:\Git\ppt-master\projects\` 根目录, 包含:
-- 3 项目整体打分对照表 (9 维度 × 3 项目)
-- 共性问题 (3 项目都中招的) → 提到 skill 层迭代
-- 单项目独有 P0 问题清单
-- 推荐推进顺序 (哪个先复审 / 哪个可直接立项)
+放在 `<projects_root>/` 根目录 (即 `ppt-master/projects/` 或 `ppt-master-projects/` 根), 两个产物:
+
+### V.1 `review-summary.md` (人看)
+- 总体裁决对照表 (项目 × 加权总分 × verdict × 复审节点)
+- 9 维度评分纵向对比 (9 行 × N 项目列)
+- 共性问题 (≥2 项目都中招的低分维度) → 提到 skill 层迭代
+- 各项目 P0 必改清单
+- 推荐推进顺序 (按 verdict rank + 分数排)
+- ppt-master skill 层改进建议
+
+### V.2 `projects_comparison.xlsx` (机器看 · 可排序筛选)
+4 个 sheet:
+- **Overview**: 每项目 1 行, 列 = 项目 / 加权总分 / verdict / P0/P1/P2 数 / Run 排级 / 下一步
+- **Scores_Matrix**: 9 维度 × N 项目 打分矩阵 + 低分/高分标记
+- **All_Issues**: 所有项目的全部 issue 摊平成一张大表 (N×18 行), 带项目列, 可按优先级/维度/评委筛选
+- **P0_Cross_Project**: 仅 P0 issue 的跨项目聚合视图 (方便一眼看到"本轮必改的全部项")
 
 ---
 
@@ -105,8 +136,8 @@
 
 | 工具 | 用途 |
 |---|---|
-| `python skills/ppt-master/scripts/review/generate_review.py <project_dir>` | 读 `review/<project>_review.json` → 生成 docx + xlsx + subjective_responses.md |
-| `python skills/ppt-master/scripts/review/build_summary.py <projects_root>` | 读多个项目的 `<project>_review.json` → 生成跨项目汇总 |
+| `python skills/ppt-master/scripts/review/generate_review.py <project_dir>` | 读 `review/<project>_review.json` → 生成 docx + xlsx (12 列) + subjective_responses.md |
+| `python skills/ppt-master/scripts/review/build_summary.py <projects_root>` | 读多个项目的 `<project>_review.json` → 生成 review-summary.md + projects_comparison.xlsx |
 
 ### `<project>_review.json` Schema
 
@@ -171,11 +202,50 @@
 2. **写 JSON**: 按 §VI Schema 填 `<project_root>/review/<project>_review.json`
 3. **跑脚本**: `python skills/ppt-master/scripts/review/generate_review.py <project_root>` → 自动产 3 件套
 4. **可选 verify**: 用 PowerPoint / WPS 打开 `<project>_review.docx` 看排版
-5. **汇总**: 3 项目都跑完后, `python skills/ppt-master/scripts/review/build_summary.py projects/` → `review-summary.md`
+5. **汇总**: 所有项目都跑完后, `python skills/ppt-master/scripts/review/build_summary.py projects/` → `review-summary.md` + `projects_comparison.xlsx`
 
 ---
 
-## VIII. 红线 / 注意
+## VIII. 决策驱动改 PPT 闭环
+
+Step 8 评审结束后, 策划/制作人在 `review/<project>_review.xlsx` Issues sheet 的 J/K/L 三列填决策, 触发后续 skill 自动化改 PPT:
+
+### VIII.1 三列决策的语义
+
+| 列 | 字段 | 语义 | 留空行为 |
+|---|---|---|---|
+| J | 要不要改 | **是否本轮执行** (改 / 待定 / 不改) | 默认 "待定", 不改 PPT |
+| K | 我要做什么 | **行动目标** (What), 一句话的结果描述 | 沿用评委 `suggestion` / `best_answer` |
+| L | 怎么做 | **具体步骤** (How), 拆到可执行粒度 | AI 按 K 推导具体步骤 |
+
+### VIII.2 三列的组合处理规则
+
+| J | K | L | skill 行为 |
+|---|---|---|---|
+| 待定/不改 | * | * | **跳过** |
+| 改 | 空 | 空 | 按评委原 `suggestion`/`best_answer` 自动改 SVG |
+| 改 | 填 | 空 | 用 K 覆盖目标, AI 自动推导步骤改 SVG |
+| 改 | 填 | 填 | 严格按 L 的步骤改 SVG, 不再推导 |
+| 改 | 空 | 填 | 警告 (缺目标只有步骤通常是不一致的) + 按 L 执行 |
+
+### VIII.3 执行工具链 (主 agent)
+
+1. 读 xlsx Issues sheet, 过滤 J="改" 的行
+2. 按上表规则, 把每条 issue 翻译成一份 **改动单 markdown** (issue ID → 目标 → 步骤 → 影响 svg 列表)
+3. 按改动单逐项修改 `svg_final/*.svg` (主 agent 做, **不能委派 sub-agent**, 见 AGENTS.md)
+4. 改完重跑 `scripts/svg_to_pptx.py` 重新打包 pptx
+5. 在 `review/` 下追加一份 `<project>_revision_log_<timestamp>.md`, 记录本轮改了哪些 issue / 哪些 svg / 产出哪个 pptx
+
+### VIII.4 自检
+
+每次执行前必须:
+- 读一遍 xlsx (不要用缓存的 json), 因为用户可能在 Excel 里手改了打分或加了自己的文字
+- 核对 issue ID 在 json 里还存在(避免 Excel 里手删了 ID 后续脚本崩)
+- 备份当前 pptx 到 `exports/.backup_<timestamp>/`
+
+---
+
+## IX. 红线 / 注意
 
 1. **不要凭空捏造数据**: 评委的所有"基准对比" (类如"对标某游戏 D1 留存 35%") 必须用 design_spec / 源文档里出现过的数据, 不能臆造
 2. **主观问题必须有 best_answer**: 不能只列问题不给答案, 那是甩锅

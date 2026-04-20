@@ -1,8 +1,10 @@
 """
-Review Board · 跨项目评审汇总 (review-summary.md)
+Review Board · 跨项目评审汇总 (review-summary.md + projects_comparison.xlsx)
 
 读 <projects_root>/<project_dir>/review/*_review.json 全部
-产出 <projects_root>/review-summary.md
+产出:
+  - <projects_root>/review-summary.md              人看的 markdown 汇总
+  - <projects_root>/projects_comparison.xlsx       机器看/可筛选的 4-sheet 对比 Excel
 
 Usage:
     python skills/ppt-master/scripts/review/build_summary.py <projects_root>
@@ -19,6 +21,10 @@ try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
 except Exception:
     pass
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 
 DIMENSIONS = {
@@ -41,6 +47,39 @@ VERDICT_LABEL = {
 
 VERDICT_RANK = {"pass": 0, "conditional_pass": 1, "not_pass": 2}
 
+# Run 平台官方排级 (外部题材数据, 定期跟用户同步; 找不到就显示 '-')
+# 优先级: review.json 里的 run_platform_rank 字段 > 这里的 fallback 映射
+RUN_RANK_FALLBACK = {
+    "A": "S+ 最优",
+    "G": "S 推荐",
+    "E": "A+ 推荐",
+    "H": "A+ 推荐",
+    "I": "A 推荐",
+    "D": "D 致命(买量封杀)",
+}
+
+PRIORITY_COLOR = {
+    "P0": "FFCCCC",
+    "P1": "FFE5B4",
+    "P2": "DCE6F1",
+}
+
+VERDICT_COLOR = {
+    "pass": "C6EFCE",
+    "conditional_pass": "FFEB9C",
+    "not_pass": "FFC7CE",
+}
+
+HEADER_FILL = PatternFill("solid", fgColor="1A2C5C")
+HEADER_FONT = Font(bold=True, color="FFFFFF", name="Microsoft YaHei")
+CELL_FONT = Font(name="Microsoft YaHei", size=10)
+THICK_BORDER = Border(
+    left=Side(style="thin"),
+    right=Side(style="thin"),
+    top=Side(style="thin"),
+    bottom=Side(style="thin"),
+)
+
 
 # JSON 内部保留 P/S1/D8 等代号 (机器可读外键), 但所有面向人的产物一律展开成全名。
 
@@ -60,6 +99,234 @@ def _avg_per_dim(scores: dict[str, dict[str, int]]) -> dict[str, float]:
         vals = [v for v in vals if v]
         out[d] = round(sum(vals) / len(vals), 2) if vals else 0.0
     return out
+
+
+def _project_short(data: dict) -> str:
+    """短名: 'A_港口开箱' (截第一个空格 / '(' 前), 用于 Excel 列头和 overview 第一列。"""
+    name = data["project"]
+    for sep in [" (", "(", " - ", " | "]:
+        if sep in name:
+            return name.split(sep)[0].strip()
+    return name[:24]
+
+
+def _run_rank(data: dict, project_dir_name: str) -> str:
+    """读 review.json 里的 run_platform_rank; 否则按项目目录名首字母查 fallback。"""
+    r = data.get("run_platform_rank")
+    if r:
+        return r
+    first = project_dir_name[:1].upper()
+    return RUN_RANK_FALLBACK.get(first, "-")
+
+
+def _count_by_priority(issues: list[dict]) -> dict[str, int]:
+    out = {"P0": 0, "P1": 0, "P2": 0}
+    for q in issues:
+        p = q.get("priority")
+        if p in out:
+            out[p] += 1
+    return out
+
+
+def _style_header_row(ws, ncols: int, row: int = 1) -> None:
+    for c in range(1, ncols + 1):
+        cell = ws.cell(row=row, column=c)
+        cell.font = HEADER_FONT
+        cell.fill = HEADER_FILL
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = THICK_BORDER
+
+
+def _build_comparison_xlsx(all_data: list[dict], out_path: Path) -> None:
+    """产出 4 sheet 的跨项目对比 Excel。"""
+    wb = Workbook()
+
+    sorted_data = sorted(
+        all_data,
+        key=lambda x: (VERDICT_RANK.get(x["verdict"], 9), -float(x["weighted_score"])),
+    )
+
+    # ============ Sheet 1: Overview ============
+    ws1 = wb.active
+    ws1.title = "Overview"
+    h1 = [
+        "项目", "加权总分", "裁决", "Run 排级",
+        "P0 数", "P1 数", "P2 数", "评审日期", "下次复审", "项目目录",
+    ]
+    for c, h in enumerate(h1, start=1):
+        ws1.cell(row=1, column=c, value=h)
+    _style_header_row(ws1, len(h1))
+
+    for r, d in enumerate(sorted_data, start=2):
+        pc = _count_by_priority(d["issues"])
+        row_vals = [
+            _project_short(d),
+            float(d["weighted_score"]),
+            VERDICT_LABEL.get(d["verdict"], d["verdict"]),
+            _run_rank(d, d["__project_dir"]),
+            pc["P0"], pc["P1"], pc["P2"],
+            d.get("review_date", "-"),
+            d.get("next_review", "-"),
+            d["__project_dir"],
+        ]
+        for c, v in enumerate(row_vals, start=1):
+            cell = ws1.cell(row=r, column=c, value=v)
+            cell.font = CELL_FONT
+            cell.alignment = Alignment(wrap_text=True, vertical="center")
+            cell.border = THICK_BORDER
+        # 裁决颜色
+        ws1.cell(row=r, column=3).fill = PatternFill(
+            "solid", fgColor=VERDICT_COLOR.get(d["verdict"], "FFFFFF")
+        )
+        # P0 数高亮红色 (≥5 表示重点项目)
+        p0_cell = ws1.cell(row=r, column=5)
+        if pc["P0"] >= 5:
+            p0_cell.fill = PatternFill("solid", fgColor="FFCCCC")
+            p0_cell.font = Font(name="Microsoft YaHei", size=10, bold=True)
+
+    widths1 = [22, 10, 24, 22, 8, 8, 8, 14, 38, 48]
+    for i, w in enumerate(widths1, start=1):
+        ws1.column_dimensions[get_column_letter(i)].width = w
+    ws1.freeze_panes = "A2"
+
+    # ============ Sheet 2: Scores_Matrix ============
+    ws2 = wb.create_sheet("Scores_Matrix")
+    short_names = [_project_short(d) for d in sorted_data]
+    h2 = ["维度"] + short_names + ["跨项目均分"]
+    for c, h in enumerate(h2, start=1):
+        ws2.cell(row=1, column=c, value=h)
+    _style_header_row(ws2, len(h2))
+
+    avg_by_proj = {d["project"]: _avg_per_dim(d["scores"]) for d in sorted_data}
+    for r, (dim_id, dim_name) in enumerate(DIMENSIONS.items(), start=2):
+        ws2.cell(row=r, column=1, value=dim_name).font = Font(bold=True, name="Microsoft YaHei")
+        ws2.cell(row=r, column=1).border = THICK_BORDER
+        row_vals = []
+        for d in sorted_data:
+            v = avg_by_proj[d["project"]][dim_id]
+            row_vals.append(v)
+        cross_avg = round(sum(row_vals) / len(row_vals), 2) if row_vals else 0
+        for c, v in enumerate(row_vals, start=2):
+            cell = ws2.cell(row=r, column=c, value=v)
+            cell.alignment = Alignment(horizontal="center")
+            cell.font = CELL_FONT
+            cell.border = THICK_BORDER
+            if v <= 2.5:
+                cell.fill = PatternFill("solid", fgColor="FFC7CE")
+            elif v <= 3.0:
+                cell.fill = PatternFill("solid", fgColor="FFEB9C")
+            elif v >= 4.5:
+                cell.fill = PatternFill("solid", fgColor="C6EFCE")
+        cell = ws2.cell(row=r, column=len(h2), value=cross_avg)
+        cell.font = Font(bold=True, name="Microsoft YaHei")
+        cell.alignment = Alignment(horizontal="center")
+        cell.fill = PatternFill("solid", fgColor="FFF7E6")
+        cell.border = THICK_BORDER
+
+    total_r = 2 + len(DIMENSIONS)
+    cell = ws2.cell(row=total_r, column=1, value="加权总分")
+    cell.font = Font(bold=True, name="Microsoft YaHei")
+    cell.fill = PatternFill("solid", fgColor="FFD700")
+    cell.border = THICK_BORDER
+    for c, d in enumerate(sorted_data, start=2):
+        cell = ws2.cell(row=total_r, column=c, value=float(d["weighted_score"]))
+        cell.font = Font(bold=True, name="Microsoft YaHei")
+        cell.alignment = Alignment(horizontal="center")
+        cell.fill = PatternFill("solid", fgColor="FFD700")
+        cell.border = THICK_BORDER
+
+    ws2.column_dimensions["A"].width = 24
+    for c in range(2, len(h2) + 1):
+        ws2.column_dimensions[get_column_letter(c)].width = 16
+    ws2.freeze_panes = "B2"
+
+    # ============ Sheet 3: All_Issues ============
+    ws3 = wb.create_sheet("All_Issues")
+    h3 = [
+        "项目", "ID", "评委", "维度", "类型", "优先级", "页号", "问题", "改动建议/最优解",
+    ]
+    for c, h in enumerate(h3, start=1):
+        ws3.cell(row=1, column=c, value=h)
+    _style_header_row(ws3, len(h3))
+
+    rownum = 2
+    for d in sorted_data:
+        rev_lookup = {r["id"]: r for r in d.get("reviewers", [])}
+        for q in d["issues"]:
+            rev = rev_lookup.get(q["reviewer"], {})
+            rev_str = f"{rev.get('name', q['reviewer'])} ({rev.get('years', '-')}年)" if rev else q["reviewer"]
+            advice = q.get("suggestion") or q.get("best_answer") or "-"
+            row_vals = [
+                _project_short(d),
+                q["id"],
+                rev_str,
+                DIMENSIONS.get(q["dimension"], q["dimension"]),
+                "客观" if q["type"] == "O" else "主观",
+                q["priority"],
+                q.get("page", "-"),
+                q["question"],
+                advice,
+            ]
+            for c, v in enumerate(row_vals, start=1):
+                cell = ws3.cell(row=rownum, column=c, value=v)
+                cell.font = CELL_FONT
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+                cell.border = THICK_BORDER
+            ws3.cell(row=rownum, column=6).fill = PatternFill(
+                "solid", fgColor=PRIORITY_COLOR.get(q["priority"], "FFFFFF")
+            )
+            rownum += 1
+
+    ws3.auto_filter.ref = f"A1:{get_column_letter(len(h3))}{rownum - 1}"
+    widths3 = [22, 8, 22, 22, 6, 8, 16, 50, 60]
+    for i, w in enumerate(widths3, start=1):
+        ws3.column_dimensions[get_column_letter(i)].width = w
+    ws3.freeze_panes = "A2"
+
+    # ============ Sheet 4: P0_Cross_Project ============
+    ws4 = wb.create_sheet("P0_Cross_Project")
+    h4 = [
+        "项目", "ID", "评委", "维度", "页号", "问题", "改动建议/最优解",
+    ]
+    for c, h in enumerate(h4, start=1):
+        ws4.cell(row=1, column=c, value=h)
+    _style_header_row(ws4, len(h4))
+
+    rownum = 2
+    for d in sorted_data:
+        rev_lookup = {r["id"]: r for r in d.get("reviewers", [])}
+        p0_issues = [q for q in d["issues"] if q["priority"] == "P0"]
+        for q in p0_issues:
+            rev = rev_lookup.get(q["reviewer"], {})
+            rev_str = f"{rev.get('name', q['reviewer'])} ({rev.get('years', '-')}年)" if rev else q["reviewer"]
+            advice = q.get("suggestion") or q.get("best_answer") or "-"
+            row_vals = [
+                _project_short(d),
+                q["id"],
+                rev_str,
+                DIMENSIONS.get(q["dimension"], q["dimension"]),
+                q.get("page", "-"),
+                q["question"],
+                advice,
+            ]
+            for c, v in enumerate(row_vals, start=1):
+                cell = ws4.cell(row=rownum, column=c, value=v)
+                cell.font = CELL_FONT
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+                cell.border = THICK_BORDER
+            ws4.cell(row=rownum, column=1).fill = PatternFill(
+                "solid", fgColor="FFCCCC"
+            )
+            rownum += 1
+
+    if rownum > 2:
+        ws4.auto_filter.ref = f"A1:{get_column_letter(len(h4))}{rownum - 1}"
+    widths4 = [22, 8, 22, 22, 16, 55, 65]
+    for i, w in enumerate(widths4, start=1):
+        ws4.column_dimensions[get_column_letter(i)].width = w
+    ws4.freeze_panes = "A2"
+
+    wb.save(out_path)
 
 
 def main(argv: list[str]) -> int:
@@ -230,6 +497,11 @@ def main(argv: list[str]) -> int:
     out_path = root / "review-summary.md"
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"  wrote: {out_path}")
+
+    xlsx_path = root / "projects_comparison.xlsx"
+    _build_comparison_xlsx(all_data, xlsx_path)
+    print(f"  wrote: {xlsx_path}")
+
     return 0
 
 

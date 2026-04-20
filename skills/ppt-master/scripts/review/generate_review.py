@@ -33,6 +33,9 @@ from docx.oxml import OxmlElement
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.formatting.rule import CellIsRule
+from openpyxl.comments import Comment
 
 
 DIMENSIONS = {
@@ -58,6 +61,18 @@ PRIORITY_COLOR = {
     "P1": "FFE5B4",
     "P2": "DCE6F1",
 }
+
+# Issues sheet 第 10 列 '要不要改' 三选一的配色 (用户改动后由条件格式动态生效)
+DECISION_COLOR = {
+    "改":   "C6EFCE",  # Excel 绿
+    "待定": "FFEB9C",  # Excel 黄
+    "不改": "D9D9D9",  # 灰
+}
+
+# 决策默认一律 '待定' — Excel 是给策划填的决策单, 不按优先级自动推荐 '改'/'不改'
+# (P0/P1/P2 已经在 '优先级' 列体现, 不再在决策列重复表达)
+DECISION_DEFAULT = "待定"
+DECISION_OPTIONS = ("改", "待定", "不改")
 
 
 # ============== display helpers ==============
@@ -337,15 +352,48 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
     rev_lookup = _rev_lookup(data["reviewers"])
 
     # ---- Sheet 1: Issues ----
+    # 列布局 (12 列): 前 9 列是评审产出 (只读), 后 3 列是用户决策 (可填)
+    #   A ID / B 评委 / C 维度 / D 类型 / E 优先级 / F 页号 / G 问题 / H 改动建议 / I 答辩话术
+    #   J 要不要改 (三选一)  ·  K 我要做什么 (行动目标)  ·  L 怎么做 (具体步骤)
     ws = wb.active
     ws.title = "Issues"
-    headers = ["ID", "评委", "维度", "类型", "优先级", "页号/影响", "问题", "改动建议/最优解", "答辩话术"]
+    headers = [
+        "ID", "评委", "维度", "类型", "优先级", "页号/影响",
+        "问题", "改动建议/最优解", "答辩话术",
+        "要不要改", "我要做什么", "怎么做",
+    ]
     for c, h in enumerate(headers, start=1):
         cell = ws.cell(row=1, column=c, value=h)
         cell.font = Font(bold=True, color="FFFFFF", name="Microsoft YaHei")
         cell.fill = PatternFill("solid", fgColor="1A2C5C")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = THICK_BORDER
+
+    # 表头批注 (hover 上去可见, 解释 3 列决策怎么填)
+    ws.cell(row=1, column=10).comment = Comment(
+        "要不要改 — 三选一下拉\n"
+        "• 改   = 本轮执行 (按下面 K/L 两列或评委原方案改 PPT)\n"
+        "• 待定 = 下次复审再定 (默认值)\n"
+        "• 不改 = 跳过此 issue",
+        "review-skill",
+    )
+    ws.cell(row=1, column=11).comment = Comment(
+        "我要做什么 — 行动目标 / What (由策划填)\n"
+        "用一句话说清你想让这条 issue 产出什么结果。\n"
+        "例: '在 Slide 28 增加美术资产分布表' / '把 Slide 14 道德 PR 钩子去法律风险化'\n"
+        "• 留空 = 沿用评委原始 '改动建议/最优解' 里的目标\n"
+        "• 填写 = 覆盖评委目标, AI 按此执行",
+        "review-skill",
+    )
+    ws.cell(row=1, column=12).comment = Comment(
+        "怎么做 — 具体步骤 / How (由策划填)\n"
+        "把动作拆到 PPT 可执行级别: Slide 号 / 位置 / 内容 / 数字 / 字体 / 色值。\n"
+        "例: 'Slide 28 右下 460x320, 5 列表, 列头=类别/工程量/单价/总价/周期, 字体 YaHei 10pt'\n"
+        "• 留空 = AI 按 'K 我要做什么' 自动推导具体步骤\n"
+        "• 填写 = 严格按这里的步骤实施, 不再推导",
+        "review-skill",
+    )
+
     for r, q in enumerate(data["issues"], start=2):
         if q["type"] == "O":
             advice = q.get("suggestion", "-")
@@ -367,6 +415,9 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
             q["question"],
             advice,
             tps,
+            DECISION_DEFAULT,
+            "",
+            "",
         ]
         for c, v in enumerate(row_vals, start=1):
             cell = ws.cell(row=r, column=c, value=v)
@@ -375,8 +426,41 @@ def _build_xlsx(data: dict[str, Any], out_path: Path) -> None:
             cell.border = THICK_BORDER
         prio_color = PRIORITY_COLOR.get(q["priority"], "FFFFFF")
         ws.cell(row=r, column=5).fill = PatternFill("solid", fgColor=prio_color)
-    # 列宽: ID / 评委 / 维度 / 类型 / 优先级 / 页号/影响 / 问题 / 改动建议 / 答辩话术
-    widths = [8, 22, 22, 6, 8, 16, 50, 60, 40]
+
+        # '要不要改' 默认染色 + 加粗居中 (条件格式稍后会覆盖, 但这里保留静态默认, 兼容不支持 CF 的 viewer)
+        dec_cell = ws.cell(row=r, column=10)
+        dec_cell.font = Font(name="Microsoft YaHei", size=10, bold=True)
+        dec_cell.alignment = Alignment(horizontal="center", vertical="center")
+        dec_cell.fill = PatternFill("solid", fgColor=DECISION_COLOR.get(DECISION_DEFAULT, "FFFFFF"))
+
+    # '要不要改' 列: 下拉验证
+    last_row = 1 + len(data["issues"])
+    decision_range = f"J2:J{last_row}"
+    dv = DataValidation(
+        type="list",
+        formula1=f'"{",".join(DECISION_OPTIONS)}"',
+        allow_blank=True,
+        showErrorMessage=True,
+    )
+    dv.error = "请选择: 改 / 待定 / 不改"
+    dv.errorTitle = "无效选项"
+    dv.prompt = "改=本轮执行 · 待定=下次复审再定 · 不改=跳过此 issue"
+    dv.promptTitle = "处理决定"
+    ws.add_data_validation(dv)
+    dv.add(decision_range)
+
+    # '要不要改' 列: 条件格式 (用户改动后自动跟随染色)
+    # 条件格式 dxf 用的是 bgColor (不是 fgColor), 这点与普通 cell.fill 不一样
+    for decision_val, color in DECISION_COLOR.items():
+        rule = CellIsRule(
+            operator="equal",
+            formula=[f'"{decision_val}"'],
+            fill=PatternFill(start_color=color, end_color=color, fill_type="solid"),
+        )
+        ws.conditional_formatting.add(decision_range, rule)
+
+    # 列宽: ID / 评委 / 维度 / 类型 / 优先级 / 页号 / 问题 / 改动建议 / 答辩话术 / 要不要改 / 我要做什么 / 怎么做
+    widths = [8, 22, 22, 6, 8, 16, 50, 60, 40, 10, 35, 45]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = "A2"
