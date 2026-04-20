@@ -29,8 +29,6 @@ DIMENSIONS = {
     "D5": "商业化-付费/留存",
     "D6": "风险-题材/合规",
     "D7": "美术/配色/素材",
-    "D8": "落地-团队/排期/预算",
-    "D9": "演讲-PPT 表达力",
 }
 
 VERDICT_LABEL = {
@@ -121,8 +119,8 @@ def main(argv: list[str]) -> int:
         )
     lines.append("")
 
-    # ===== II. 9 维度评分纵向对比 =====
-    lines.append("## II. 9 维度评分纵向对比")
+    # ===== II. 7 维度评分纵向对比 =====
+    lines.append("## II. 7 维度评分纵向对比")
     lines.append("")
     header = ["维度"] + [d["project"][:18] for d in all_data]
     lines.append("| " + " | ".join(header) + " |")

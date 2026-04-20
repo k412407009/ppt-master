@@ -43,8 +43,6 @@ DIMENSIONS = {
     "D5": "商业化-付费/留存",
     "D6": "风险-题材/合规",
     "D7": "美术/配色/素材",
-    "D8": "落地-团队/排期/预算",
-    "D9": "演讲-PPT 表达力",
 }
 
 VERDICT_LABEL = {
@@ -247,7 +245,7 @@ def _build_docx(data: dict[str, Any], out_path: Path) -> None:
     _add_heading(doc, "II.2 三大风险", level=2)
     _add_bullet(doc, data.get("risks", []))
 
-    _add_heading(doc, "II.3 9 维度评分总表", level=2)
+    _add_heading(doc, "II.3 7 维度评分总表", level=2)
     _scores_table(doc, data["scores"], data["reviewers"])
 
     # ---- 逐评委意见 ----
@@ -264,7 +262,7 @@ def _build_docx(data: dict[str, Any], out_path: Path) -> None:
         _add_para(doc, f"视角: {rev['perspective']}", size=10)
 
         rev_scores = data["scores"].get(rev["id"], {})
-        # 9 维度打分一行太长, 拆 3 行 (每行 3 维度), 全部用维度全名
+        # 7 维度打分拆 3 行 (每行 3 维度, 最后一行 1 维度), 全部用维度全名
         dim_items = list(DIMENSIONS.items())
         for chunk_start in range(0, len(dim_items), 3):
             chunk = dim_items[chunk_start:chunk_start + 3]
