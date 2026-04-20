@@ -16,7 +16,7 @@
 
 - ppt-master 的本职是 "生成 PPT", review 只是它的收尾
 - 外部游戏评审 (不生成 PPT) 用这套脚本时, 导入 ppt-master 全家桶过重
-- 未来 CLI / Web 化需要独立的干净代码库 (见 `丁亮的个人助手/丁开心的游戏观察/external-game-reviews/website_roadmap.md`)
+- 未来 CLI / Web 化需要独立的干净代码库 (见 [`game-review/docs/roadmap.md`](../../../../../game-review/docs/roadmap.md))
 
 ## 对 E / H / I 内部项目的影响
 
@@ -33,7 +33,7 @@
 
 ## 如果你要改 review 逻辑
 
-请改 **新 skill** (`f:/Git/game-review/skills/game-review/scripts/review/`), **不要** 改本目录, 避免两边分叉。本目录的 3 个脚本在 2026-04-21 之后应视为"只读归档"。
+请改 **新 skill** (`../../../../../game-review/skills/game-review/scripts/review/`, 相对于本文件的路径; 跨平台兼容), **不要** 改本目录, 避免两边分叉。本目录的 3 个脚本在 2026-04-21 之后应视为"只读归档"。
 
 如果必须改本目录 (例如紧急修 E 项目的 review 生成 bug), 记得 **同步改到新 skill**, 或者直接删掉本目录里的脚本, 改为软引用到新 skill。
 
@@ -41,4 +41,5 @@
 
 - 新 skill 门面: [`game-review/skills/game-review/SKILL.md`](../../../../../game-review/skills/game-review/SKILL.md)
 - 新 skill charter: [`game-review/skills/game-review/references/review-board.md`](../../../../../game-review/skills/game-review/references/review-board.md)
-- 产品化路线图: [`丁亮的个人助手/丁开心的游戏观察/external-game-reviews/website_roadmap.md`](../../../../../丁亮的个人助手/丁开心的游戏观察/external-game-reviews/website_roadmap.md)
+- 产品化路线图 (skill 内公开版): [`game-review/docs/roadmap.md`](../../../../../game-review/docs/roadmap.md)
+- 完整 SaaS 化设计 (756 行, 业主私有库): `<workspace>/personal-assistant/丁开心的游戏观察/external-game-reviews/website_roadmap.md` (macOS 路径; Windows 上为 `F:\Git\丁亮的个人助手\...`)
