@@ -5,6 +5,10 @@ Auto-collects game prototype reference visuals for PPT projects.
 > Distilled from `丁开心的游戏观察/sources/fetch_game_assets.py` and
 > `gen_images.py`. Re-organized as a project-aware sub-pipeline of `ppt-master`,
 > driven by **Step 4.5 Game Asset Collection** in `SKILL.md`.
+>
+> **2026-04-22 起说明**：这里的 `fetch_game_assets.py` 已经降级为兼容 wrapper。
+> 真正的主实现搬到了同级仓库 `../game-asset-collector/`，这样 `ppt-master`
+> 和 `game-review` 可以稳定共用同一套抓取 / 抽帧 / 标注逻辑。
 
 ## Why this exists
 
@@ -30,7 +34,7 @@ Steps 1 and 2 cover the user request "从商店或 DLC 抓取" and "寻找游戏
 
 | File | Purpose |
 |------|---------|
-| `fetch_game_assets.py` | P0 store screenshots + P1 video frame extraction + P1+ AI labeling + P2 emit Image Resource List |
+| `fetch_game_assets.py` | Compatibility wrapper that forwards to the shared `game-asset-collector` implementation |
 | `image_remix.py` | `collage` (PIL stitching) + `i2i` (Seedream image-to-image) + `describe-then-t2i` fallback + `remix` combo |
 | `__init__.py` | Marks the package |
 
