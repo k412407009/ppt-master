@@ -46,6 +46,12 @@ Windows 用户建议直接看：
 
 - [Windows 安装指南](./docs/zh/windows-installation.md)
 
+第一次串三仓前，建议先跑一遍体检：
+
+```bash
+python3 scripts/stack_doctor.py
+```
+
 ## 最快使用方式
 
 1. 把源文件放进 `projects/` 目录。
@@ -134,6 +140,19 @@ python3 skills/ppt-master/scripts/image_gen.py --list-backends
 - [同事接入指南](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md)
 - [生态清单](./docs/生态清单_ECOSYSTEM_MANIFEST.json)
 
+建议先做 3 个体检动作：
+
+```bash
+# 主仓体检
+python3 scripts/stack_doctor.py
+
+# 采集器体检
+python3 ../game-asset-collector/scripts/fetch_game_assets.py --doctor
+
+# 评审项目体检
+cd ../game-review && python3 -m game_review.cli doctor <project_dir>
+```
+
 ## 文档入口
 
 | 文档 | 说明 |
@@ -142,6 +161,7 @@ python3 skills/ppt-master/scripts/image_gen.py --list-backends
 | [Windows 安装指南](./docs/zh/windows-installation.md) | Windows 用户安装步骤 |
 | [为什么选这套引擎](./docs/zh/why-ppt-master.md) | 和其他 AI PPT 工具的区别 |
 | [SKILL.md](./skills/ppt-master/SKILL.md) | 核心流程与规则 |
+| [scripts/stack_doctor.py](./scripts/stack_doctor.py) | 三仓环境、Key 和系统依赖体检 |
 | [三仓协同架构](./docs/三仓协同架构_THREE_REPO_STACK.md) | 三仓完整链路 |
 | [同事接入指南](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md) | 给同事看的下载、目录、API Key 说明 |
 | [游戏评审闭环](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | 从素材到评审报告再到 PPT 的闭环 |
