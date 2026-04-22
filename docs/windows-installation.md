@@ -1,6 +1,6 @@
-# Windows Installation Guide
+# Game PPT Master Windows Installation Guide
 
-This guide walks you through installing PPT Master on Windows step by step. Follow along and you'll have a working setup in under 10 minutes.
+This guide walks you through installing Game PPT Master on Windows step by step. Follow along and you'll have a working setup in under 10 minutes.
 
 ---
 
@@ -30,15 +30,15 @@ Python is the only hard requirement.
 
 **Option A — Download ZIP** (easiest):
 
-1. Go to [github.com/hugohe3/ppt-master](https://github.com/hugohe3/ppt-master)
+1. Go to [github.com/k412407009/game-ppt-master](https://github.com/k412407009/game-ppt-master)
 2. Click the green **Code** button → **Download ZIP**
-3. Unzip to `C:\Users\YourName\ppt-master`
+3. Unzip to `C:\Users\YourName\game-ppt-master`
 
 **Option B — Git Clone** (requires [Git](https://git-scm.com/downloads)):
 
 ```powershell
-git clone https://github.com/hugohe3/ppt-master.git
-cd ppt-master
+git clone https://github.com/k412407009/game-ppt-master.git
+cd game-ppt-master
 ```
 
 ---
@@ -46,7 +46,7 @@ cd ppt-master
 ## Step 3 — Install Dependencies
 
 ```powershell
-cd C:\Users\YourName\ppt-master   # ← adjust to your actual path
+cd C:\Users\YourName\game-ppt-master   # ← adjust to your actual path
 pip install -r requirements.txt
 ```
 
@@ -70,7 +70,7 @@ python -c "import pptx; import fitz; print('All core dependencies OK')"
 
 ## Step 5 — Run a Minimal Example
 
-Open your AI editor (Cursor, VS Code + Copilot, etc.), open the `ppt-master` folder, and type in the chat:
+Open your AI editor (Cursor, VS Code + Copilot, etc.), open the `game-ppt-master` folder, and type in the chat:
 
 ```
 Please create a simple 3-page test PPT with a cover, one content page, and a closing page. Topic: "Hello World".
@@ -147,5 +147,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ## Still stuck?
 
 - 📖 [FAQ](./faq.md)
-- 🐛 [GitHub Issues](https://github.com/hugohe3/ppt-master/issues) — include your Python version, Windows version, and full error message
-- 💬 [GitHub Discussions](https://github.com/hugohe3/ppt-master/discussions)
+- 🐛 [GitHub Issues](https://github.com/k412407009/game-ppt-master/issues) — include your Python version, Windows version, and full error message
+- 📦 [Repository Home](https://github.com/k412407009/game-ppt-master)
+- 🧱 [Upstream Base Engine](https://github.com/hugohe3/ppt-master)

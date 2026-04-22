@@ -2,7 +2,7 @@
 
 ## 这份文档是干什么的
 
-这不是一份单独的脚本说明，而是把 `ppt-master`、`game-asset-collector` 和 `game-review` 三个仓库之间的协作边界、输入输出和复现要求固化下来。
+这不是一份单独的脚本说明，而是把 `game-ppt-master`、`game-asset-collector` 和 `game-review` 三个仓库之间的协作边界、输入输出和复现要求固化下来。
 
 适用两类场景：
 
@@ -13,7 +13,7 @@
 
 ## 三个仓库各自负责什么
 
-### `ppt-master`
+### `game-ppt-master`
 
 负责上游制作和素材准备：
 
@@ -63,7 +63,7 @@
 
 ```text
 源材料
-  -> ppt-master Step 1-7
+  -> game-ppt-master Step 1-7
   -> 导出 PPTX
   -> 评委会讨论并填写 review.json
   -> game-review 生成 docx/xlsx/md

@@ -1,21 +1,21 @@
 {
   "schema_version": "1.0",
   "updated_at": "2026-04-22",
-  "stack_name": "ppt-master-local-stack",
+  "stack_name": "game-ppt-master-local-stack",
   "workspace_layout": {
     "type": "sibling_repos",
     "recommended_root": "~/Desktop/Git",
     "repos": [
-      "ppt-master",
+      "game-ppt-master",
       "game-asset-collector",
       "game-review"
     ]
   },
   "shareable_entrypoints": {
-    "team_onboarding_doc": "https://github.com/k412407009/ppt-master/blob/main/docs/%E5%90%8C%E4%BA%8B%E6%8E%A5%E5%85%A5%E6%8C%87%E5%8D%97_TEAM_ONBOARDING_GUIDE.md",
-    "three_repo_stack_doc": "https://github.com/k412407009/ppt-master/blob/main/docs/%E4%B8%89%E4%BB%93%E5%8D%8F%E5%90%8C%E6%9E%B6%E6%9E%84_THREE_REPO_STACK.md",
+    "team_onboarding_doc": "https://github.com/k412407009/game-ppt-master/blob/main/docs/%E5%90%8C%E4%BA%8B%E6%8E%A5%E5%85%A5%E6%8C%87%E5%8D%97_TEAM_ONBOARDING_GUIDE.md",
+    "three_repo_stack_doc": "https://github.com/k412407009/game-ppt-master/blob/main/docs/%E4%B8%89%E4%BB%93%E5%8D%8F%E5%90%8C%E6%9E%B6%E6%9E%84_THREE_REPO_STACK.md",
     "repos": [
-      "https://github.com/k412407009/ppt-master",
+      "https://github.com/k412407009/game-ppt-master",
       "https://github.com/k412407009/game-asset-collector",
       "https://github.com/k412407009/game-review"
     ]
@@ -37,7 +37,7 @@
         "name": "ARK_API_KEY",
         "used_by": [
           "game-asset-collector",
-          "ppt-master"
+          "game-ppt-master"
         ],
         "purpose": "ARK / Doubao Vision labeling and Volcengine-compatible image features"
       },
@@ -45,7 +45,7 @@
         "name": "VOLCENGINE_API_KEY",
         "used_by": [
           "game-asset-collector",
-          "ppt-master"
+          "game-ppt-master"
         ],
         "purpose": "Alias for ARK-compatible Volcengine access; also used by image generation backends"
       },
@@ -59,40 +59,27 @@
       {
         "name": "IMAGE_BACKEND",
         "used_by": [
-          "ppt-master"
+          "game-ppt-master"
         ],
         "purpose": "Selects the image generation provider such as volcengine, openai, or gemini"
       }
     ],
-    "optional_internal_conventions": [
+    "compatibility_notes": [
       {
-        "name": "DEVTABLE_API_KEY",
-        "status": "recommended_only",
-        "notes": "DevTable is not currently a built-in dependency of the public three-repo stack."
-      },
-      {
-        "name": "DEVTABLE_BASE_URL",
-        "status": "recommended_only",
-        "notes": "Suggested naming for a future internal collaboration-data layer."
-      },
-      {
-        "name": "DEVTABLE_APP_ID",
-        "status": "recommended_only",
-        "notes": "Suggested naming for a future internal collaboration-data layer."
-      },
-      {
-        "name": "DEVTABLE_TABLE_ID",
-        "status": "recommended_only",
-        "notes": "Suggested naming for a future internal collaboration-data layer."
+        "topic": "repo_rename",
+        "notes": "The public repo name is `game-ppt-master`, while internal skill paths remain under `skills/ppt-master/...` for compatibility."
       }
     ]
   },
   "modules": [
     {
-      "id": "ppt-master",
+      "id": "game-ppt-master",
       "role": "main_workflow",
-      "repo_url": "https://github.com/k412407009/ppt-master",
-      "local_dir": "ppt-master",
+      "repo_url": "https://github.com/k412407009/game-ppt-master",
+      "local_dir": "game-ppt-master",
+      "legacy_local_dir_aliases": [
+        "ppt-master"
+      ],
       "visibility": "public",
       "required": true,
       "entrypoints": [
@@ -151,6 +138,7 @@
         "game-asset-collector"
       ],
       "optional_depends_on": [
+        "game-ppt-master",
         "ppt-master"
       ],
       "outputs": [
@@ -180,7 +168,7 @@
         "pandoc",
         "Node fallback"
       ],
-      "notes": "Used by ppt-master for source-to-Markdown conversion."
+      "notes": "Used by game-ppt-master for source-to-Markdown conversion."
     },
     {
       "layer": "image_generation",
@@ -199,7 +187,7 @@
         "fal",
         "Replicate"
       ],
-      "notes": "Configured through IMAGE_BACKEND in ppt-master."
+      "notes": "Configured through IMAGE_BACKEND in game-ppt-master."
     },
     {
       "layer": "asset_collection",
@@ -229,8 +217,8 @@
   "recommended_flows": [
     {
       "id": "ppt_only",
-      "requires": [
-        "ppt-master"
+        "requires": [
+        "game-ppt-master"
       ],
       "steps": [
         "Convert source materials to Markdown",
@@ -240,8 +228,8 @@
     },
     {
       "id": "ppt_plus_assets",
-      "requires": [
-        "ppt-master",
+        "requires": [
+        "game-ppt-master",
         "game-asset-collector"
       ],
       "steps": [
@@ -252,8 +240,8 @@
     },
     {
       "id": "full_review_loop",
-      "requires": [
-        "ppt-master",
+        "requires": [
+        "game-ppt-master",
         "game-asset-collector",
         "game-review"
       ],

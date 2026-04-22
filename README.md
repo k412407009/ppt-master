@@ -1,42 +1,42 @@
-# PPT Master — AI generates natively editable PPTX from any document
+# Game PPT Master — AI generates natively editable PPTX for game-industry decks
 
-[![Version](https://img.shields.io/badge/version-v2.3.0-blue.svg)](https://github.com/hugohe3/ppt-master/releases)
+[![Version](https://img.shields.io/badge/version-v2.3.0-blue.svg)](https://github.com/k412407009/game-ppt-master/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/hugohe3/ppt-master.svg)](https://github.com/hugohe3/ppt-master/stargazers)
-[![AtomGit stars](https://atomgit.com/hugohe3/ppt-master/star/badge.svg)](https://atomgit.com/hugohe3/ppt-master)
+[![GitHub stars](https://img.shields.io/github/stars/k412407009/game-ppt-master.svg)](https://github.com/k412407009/game-ppt-master/stargazers)
 
 English | [中文](./README_CN.md)
 
 <p align="center">
-  <a href="https://hugohe3.github.io/ppt-master/"><strong>Live Demo</strong></a> ·
-  <a href="https://www.hehugo.com/"><strong>About Hugo He</strong></a> ·
+  <a href="./docs/三仓协同架构_THREE_REPO_STACK.md"><strong>Three-Repo Stack</strong></a> ·
+  <a href="./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md"><strong>Game Customization Notes</strong></a> ·
   <a href="./examples/"><strong>Examples</strong></a> ·
   <a href="./docs/faq.md"><strong>FAQ</strong></a> ·
-  <a href="mailto:heyug3@gmail.com"><strong>Contact</strong></a>
+  <a href="https://github.com/k412407009/game-ppt-master/issues"><strong>Issues</strong></a>
 </p>
 
-> **Official channels —** this project is published **only** on [GitHub](https://github.com/hugohe3/ppt-master) (primary) and [AtomGit](https://atomgit.com/hugohe3/ppt-master) (auto-synced mirror). Redistributions on any other platform are unofficial and not maintained by the author. Licensed under MIT — attribution required.
+> **Repository positioning** — Game PPT Master is a public, game-focused derivative of upstream [hugohe3/ppt-master](https://github.com/hugohe3/ppt-master). The base editable PPTX engine stays compatible with upstream, while this repo adds game-specific workflow, shared asset collection, and structured review handoff. See [Game Customization Notes](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md).
 
 ---
 
-Drop in a PDF, DOCX, URL, or Markdown — get back a **natively editable PowerPoint** with real shapes, real text boxes, and real charts. Not images. Click anything and edit it.
+Drop in a PDF, DOCX, URL, or Markdown — get back a **natively editable PowerPoint** with real shapes, real text boxes, and real charts. Then keep going into game-specific asset collection, review production, and final deck output.
 
-> **How it works** — PPT Master is a workflow (a "skill") that works inside AI IDEs like Claude Code, Cursor, VS Code + Copilot, or Codebuddy. You chat with the AI — "make a deck from this PDF" — and it follows the workflow to produce a real editable `.pptx` on your computer. No coding on your side; the IDE is just where the conversation happens.
+> **How it works** — Game PPT Master is a workflow (a "skill") that works inside AI IDEs like Claude Code, Cursor, VS Code + Copilot, or Codebuddy. You chat with the AI — "make a game deck from this PDF" — and it follows the workflow to produce a real editable `.pptx` on your computer. No coding on your side; the IDE is just where the conversation happens.
 >
 > **What you'll do**: install Python, install an AI IDE, drop in your material. First-time setup is about 15 minutes. Each deck takes ~10–20 minutes of back-and-forth with the AI.
 
-**[Why PPT Master?](./docs/why-ppt-master.md)**
+**[Why this engine?](./docs/why-ppt-master.md)**
 
 There's no shortage of AI presentation tools — what's missing is one where the output is **actually usable as a real PowerPoint file**. I build presentations every day, but most tools export images or web screenshots: they look nice but you can't edit anything. Others produce bare-bones text boxes and bullet lists. And they all want a monthly subscription, upload your files to their servers, and lock you into their platform.
 
-PPT Master is different:
+Game PPT Master is different:
 
 - **Real PowerPoint** — if a file can't be opened and edited in PowerPoint, it shouldn't be called a PPT. Every element PPT Master outputs is directly clickable and editable
+- **Game-industry workflow** — this repo adds collector handoff, game-review integration, and a repeatable game deck / review loop on top of the base PPT engine
 - **Transparent, predictable cost** — the tool is free and open source; the only cost is your own AI editor, and you know exactly what you're paying. As low as **$0.08/deck** with VS Code Copilot
 - **Data stays local** — your files shouldn't have to be uploaded to someone else's server just to make a presentation. Apart from AI model communication, the entire pipeline runs on your machine
 - **No platform lock-in** — your workflow shouldn't be held hostage by any single company. Works with Claude Code, Cursor, VS Code Copilot, and more; supports Claude, GPT, Gemini, Kimi, and other models
 
-**[See live examples →](https://hugohe3.github.io/ppt-master/)** · [`examples/`](./examples/) — 15 projects, 229 pages
+**[See base-engine examples →](https://hugohe3.github.io/ppt-master/)** · [`examples/`](./examples/) — 15 projects, 229 pages
 
 ## Gallery
 
@@ -57,15 +57,18 @@ PPT Master is different:
 
 ---
 
-## Built by Hugo He
+## Upstream Foundation
 
-I'm a finance professional (CPA · CPV · Consulting Engineer (Investment)) who got tired of spending hours on presentations that could be automated. So I built this.
+The native editable PPTX engine and the original `ppt-master` workflow were created by [Hugo He](https://github.com/hugohe3/ppt-master). That upstream work is still the technical foundation of this repository.
 
-PPT Master started from a simple frustration: existing AI slide tools export images, not editable shapes. As someone who reviews and edits hundreds of slides in investment and consulting work, that was unacceptable. I wanted real DrawingML — click on any element and change it, just like you built it by hand.
+Game PPT Master is the game-industry adaptation layer on top of that foundation. This public repo focuses on:
 
-This project is my attempt to bridge the gap between **domain expertise** and **product engineering** — turning a complex professional pain point into an open-source tool that anyone can use.
+- external game asset collection handoff
+- structured game review production
+- a three-repo local stack with `game-asset-collector` and `game-review`
+- game-oriented project prompts and delivery flow
 
-🌐 [Personal website](https://www.hehugo.com/) · 📧 [heyug3@gmail.com](mailto:heyug3@gmail.com) · 🐙 [@hugohe3](https://github.com/hugohe3)
+For the full delta from upstream, read [Game Customization Notes](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md).
 
 ---
 
@@ -136,13 +139,13 @@ sudo apt install pandoc
 
 ### 3. Set Up
 
-**Option A — Download ZIP** (no Git required): click **Code → Download ZIP** on the [GitHub page](https://github.com/hugohe3/ppt-master), then unzip.
+**Option A — Download ZIP** (no Git required): click **Code → Download ZIP** on the [GitHub page](https://github.com/k412407009/game-ppt-master), then unzip.
 
 **Option B — Git clone** (requires [Git](https://git-scm.com/downloads) installed):
 
 ```bash
-git clone https://github.com/hugohe3/ppt-master.git
-cd ppt-master
+git clone https://github.com/k412407009/game-ppt-master.git
+cd game-ppt-master
 ```
 
 Then install dependencies:
@@ -209,20 +212,26 @@ If you want the complete local workflow instead of the PPT-only path, clone thes
 
 ```text
 <workspace>/
-  ppt-master/             # main workflow + PPT generation
+  game-ppt-master/        # main workflow + PPT generation
   game-asset-collector/   # store / video asset collection
   game-review/            # structured review report generation
 ```
 
+Internal compatibility note:
+
+- The public repo name is `game-ppt-master`
+- The internal skill path remains `skills/ppt-master/...`
+- Do not rename the internal `skills/ppt-master` directory unless you also update downstream scripts
+
 Public repositories:
 
-- [ppt-master](https://github.com/k412407009/ppt-master)
+- [game-ppt-master](https://github.com/k412407009/game-ppt-master)
 - [game-asset-collector](https://github.com/k412407009/game-asset-collector)
 - [game-review](https://github.com/k412407009/game-review)
 
 Recommended order:
 
-1. Clone `ppt-master`
+1. Clone `game-ppt-master`
 2. Clone `game-asset-collector`
 3. Clone `game-review`
 
@@ -237,13 +246,14 @@ Then read the full stack guide:
 
 | | Document | Description |
 |---|----------|-------------|
-| 🆚 | [Why PPT Master](./docs/why-ppt-master.md) | How it compares to Gamma, Copilot, and other AI tools |
+| 🆚 | [Why This Engine](./docs/why-ppt-master.md) | How the upstream PPT engine compares to Gamma, Copilot, and other AI tools |
 | 🪟 | [Windows Installation](./docs/windows-installation.md) | Step-by-step setup guide for Windows users |
 | 📖 | [SKILL.md](./skills/ppt-master/SKILL.md) | Core workflow and rules |
+| 🎮 | [Game Customization Notes](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md) | What changed from upstream `ppt-master`, what stayed compatible, and why this repo is named `game-ppt-master` |
 | 🤝 | [Team Onboarding](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md) | Shareable setup guide for colleagues: download links, API keys, local wiring, and first-run flow |
 | 🧭 | [Three-Repo Stack](./docs/三仓协同架构_THREE_REPO_STACK.md) | End-to-end architecture, clone layout, model/API boundaries, and full workflow |
-| 🧩 | [Ecosystem Manifest](./docs/生态清单_ECOSYSTEM_MANIFEST.json) | Machine-readable module manifest for `ppt-master` + `game-asset-collector` + `game-review` |
-| 🎮 | [Game Review Closed Loop](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | How `ppt-master` hands off assets and review JSON into `game-review` |
+| 🧩 | [Ecosystem Manifest](./docs/生态清单_ECOSYSTEM_MANIFEST.json) | Machine-readable module manifest for `game-ppt-master` + `game-asset-collector` + `game-review` |
+| 🎯 | [Game Review Closed Loop](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | How `game-ppt-master` hands off assets and review JSON into `game-review` |
 | 📐 | [Canvas Formats](./skills/ppt-master/references/canvas-formats.md) | PPT 16:9, Xiaohongshu, WeChat, and 10+ formats |
 | 🛠️ | [Scripts & Tools](./skills/ppt-master/scripts/README.md) | All scripts and commands |
 | 💼 | [Examples](./examples/README.md) | 15 projects, 229 pages |
@@ -266,26 +276,11 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get involved.
 
 ## Contact & Collaboration
 
-Looking to collaborate, integrate PPT Master into your workflow, or just have questions?
+Looking to collaborate, integrate Game PPT Master into your workflow, or just have questions?
 
-- 💬 **Questions & sharing** — [GitHub Discussions](https://github.com/hugohe3/ppt-master/discussions)
-- 🐛 **Bug reports & feature requests** — [GitHub Issues](https://github.com/hugohe3/ppt-master/issues)
-- 📧 **Business & consulting inquiries** — [heyug3@gmail.com](mailto:heyug3@gmail.com)
-- 🌐 **Learn more about the author** — [www.hehugo.com](https://www.hehugo.com/)
-
----
-
-## Star History
-
-If this project helps you, please give it a ⭐!
-
-<a href="https://star-history.com/#hugohe3/ppt-master&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hugohe3/ppt-master&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hugohe3/ppt-master&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hugohe3/ppt-master&type=Date" />
- </picture>
-</a>
+- 🐛 **Bug reports & feature requests** — [GitHub Issues](https://github.com/k412407009/game-ppt-master/issues)
+- 📦 **Repository home** — [github.com/k412407009/game-ppt-master](https://github.com/k412407009/game-ppt-master)
+- 🧱 **Upstream base engine** — [github.com/hugohe3/ppt-master](https://github.com/hugohe3/ppt-master)
 
 ---
 
@@ -298,22 +293,6 @@ If this project helps you, please give it a ⭐!
   </a>
 </p>
 
----
+Made with ❤️ on top of [Hugo He's upstream engine](https://github.com/hugohe3/ppt-master)
 
-## Sponsor
-
-If this project saves you time, consider buying me a coffee!
-
-**PayPal**
-
-<a href="https://paypal.me/hugohe3"><img src="https://img.shields.io/badge/PayPal-Sponsor-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="Sponsor via PayPal" /></a>
-
-**Alipay / 支付宝**
-
-<img src="docs/assets/alipay-qr.jpg" alt="Alipay QR Code" width="250" />
-
----
-
-Made with ❤️ by [Hugo He](https://www.hehugo.com/)
-
-[⬆ Back to Top](#ppt-master--ai-generates-natively-editable-pptx-from-any-document)
+[⬆ Back to Top](#game-ppt-master--ai-generates-natively-editable-pptx-for-game-industry-decks)

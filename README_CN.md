@@ -1,42 +1,42 @@
-# PPT Master — AI 生成原生可编辑 PPTX，支持任意文档输入
+# Game PPT Master — 面向游戏行业的原生可编辑 PPTX 工作流
 
-[![Version](https://img.shields.io/badge/version-v2.3.0-blue.svg)](https://github.com/hugohe3/ppt-master/releases)
+[![Version](https://img.shields.io/badge/version-v2.3.0-blue.svg)](https://github.com/k412407009/game-ppt-master/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/hugohe3/ppt-master.svg)](https://github.com/hugohe3/ppt-master/stargazers)
-[![AtomGit stars](https://atomgit.com/hugohe3/ppt-master/star/badge.svg)](https://atomgit.com/hugohe3/ppt-master)
+[![GitHub stars](https://img.shields.io/github/stars/k412407009/game-ppt-master.svg)](https://github.com/k412407009/game-ppt-master/stargazers)
 
 [English](./README.md) | 中文
 
 <p align="center">
-  <a href="https://hugohe3.github.io/ppt-master/"><strong>在线预览</strong></a> ·
-  <a href="https://www.hehugo.com/"><strong>关于何雨果</strong></a> ·
+  <a href="./docs/三仓协同架构_THREE_REPO_STACK.md"><strong>三仓架构</strong></a> ·
+  <a href="./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md"><strong>游戏向魔改说明</strong></a> ·
   <a href="./examples/"><strong>示例</strong></a> ·
   <a href="./docs/zh/faq.md"><strong>常见问题</strong></a> ·
-  <a href="mailto:heyug3@gmail.com"><strong>联系我</strong></a>
+  <a href="https://github.com/k412407009/game-ppt-master/issues"><strong>Issues</strong></a>
 </p>
 
-> **官方渠道 —** 本项目**仅**在 [GitHub](https://github.com/hugohe3/ppt-master)（主仓库）和 [AtomGit](https://atomgit.com/hugohe3/ppt-master)（自动同步镜像）发布。其他平台上的转发版本均为非官方版本，不由作者维护。遵循 MIT 协议——使用需保留署名。
+> **仓库定位** — Game PPT Master 是基于上游 [hugohe3/ppt-master](https://github.com/hugohe3/ppt-master) 做的公开游戏行业定向改造版。底层可编辑 PPTX 引擎保持兼容，这个仓库额外补了游戏向工作流、共享采集器衔接和结构化评审闭环。详见 [游戏向魔改说明](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md)。
 
 ---
 
-丢进一份 PDF、DOCX、网址或 Markdown，拿回一份**原生可编辑的 PowerPoint**——真正的形状、真正的文本框、真正的图表，不是图片。点击任何元素即可编辑。
+丢进一份 PDF、DOCX、网址或 Markdown，拿回一份**原生可编辑的 PowerPoint**——真正的形状、真正的文本框、真正的图表，不是图片。然后继续衔接游戏素材抓取、评审产出和最终汇报。
 
-> **运作方式** —— PPT Master 是一套在 AI IDE（Claude Code / Cursor / VS Code + Copilot / Codebuddy 等）里运行的工作流（一个 "skill"）。你在 IDE 的对话框里跟 AI 说"用这份 PDF 做一份 PPT"，AI 按这套工作流在你本机生成一个真正可编辑的 `.pptx`。你不写任何代码——IDE 只是你和 AI 对话的地方。
+> **运作方式** —— Game PPT Master 是一套在 AI IDE（Claude Code / Cursor / VS Code + Copilot / Codebuddy 等）里运行的工作流（一个 "skill"）。你在 IDE 的对话框里跟 AI 说"用这份资料做一份游戏行业 PPT"，AI 按这套工作流在你本机生成一个真正可编辑的 `.pptx`。你不写任何代码——IDE 只是你和 AI 对话的地方。
 >
 > **你要做的**：装 Python、装一个 AI IDE、把资料放进来。第一次配置约 15 分钟；之后每做一份 PPT 大约 10–20 分钟的聊天。
 
-**[为什么选 PPT Master？](./docs/zh/why-ppt-master.md)**
+**[为什么选这套底层引擎？](./docs/zh/why-ppt-master.md)**
 
 市面上不缺 AI PPT 工具——缺的是一个**生成出来的 PPT 能真正拿去用**的工具。我每天都在做 PPT，但大部分产品输出的是图片或网页截图，好看但改不了；要么就是基础到只有文本框和列表。你还得按月充会员，把文件传到别人的服务器上，被锁在某个平台里。
 
-PPT Master 不一样：
+Game PPT Master 不一样：
 
-- **真正的 PPT** — 如果一个文件在 PowerPoint 里打不开、不能编辑，它就不应该被叫做 PPT。PPT Master 输出的每个元素都能直接点击修改
+- **真正的 PPT** — 如果一个文件在 PowerPoint 里打不开、不能编辑，它就不应该被叫做 PPT。Game PPT Master 输出的每个元素都能直接点击修改
+- **游戏行业闭环** — 在底层 PPT 能力之上，这个仓库补了素材抓取衔接、评审报告联动和游戏向工作流
 - **成本透明可控** — 工具免费开源，唯一成本是你自己的 AI 编辑器，花了多少钱你清清楚楚。VS Code Copilot 下最低 **$0.08/份**
 - **数据不出本地** — 你的文件不应该为了做一份 PPT 就被上传到别人的服务器。除与 AI 模型的对话外，全流程在你的电脑上完成
 - **不锁定平台** — 你的工作流不应该被任何一家公司绑架。Claude Code、Cursor、VS Code Copilot 等均可驱动；Claude、GPT、Gemini、Kimi 等模型均可使用
 
-**[在线预览 →](https://hugohe3.github.io/ppt-master/)** · [`examples/`](./examples/) — 15 个项目，229 页
+**[查看底层引擎示例 →](https://hugohe3.github.io/ppt-master/)** · [`examples/`](./examples/) — 15 个项目，229 页
 
 ## 效果展示
 
@@ -57,15 +57,18 @@ PPT Master 不一样：
 
 ---
 
-## 关于作者
+## 上游基础与游戏向改造
 
-我是何雨果（Hugo He），一名投融资领域的专业人士（注册会计师 · 资产评估师 · 咨询工程师（投资）），同时也是一名开源产品实践者。
+原始的 `ppt-master` 引擎与可编辑 PPTX 工作流由 [Hugo He](https://github.com/hugohe3/ppt-master) 创建，这部分仍然是本仓库的底层技术基础。
 
-PPT Master 源于一个真实的痛点：在投融资和咨询工作中，我每天都要制作和审阅大量 PPT，而市面上的 AI 幻灯片工具导出的都是图片，不是可编辑的元素。作为一个每天都需要点击进去修改内容的人，这完全不可接受。我需要的是真正的 DrawingML——点击任何元素都能直接编辑，就像手工搭建的一样。
+Game PPT Master 在这个基础上，专门面向游戏行业补了几层能力：
 
-这个项目是我把**专业领域经验**和**产品工程能力**结合起来的一次实践——把一个复杂的专业痛点，变成一个任何人都能用的开源工具。
+- 三仓协同：`game-ppt-master` + `game-asset-collector` + `game-review`
+- 外部游戏素材抓取与抽帧衔接
+- 结构化评审报告闭环
+- 游戏项目用的 skill / prompt / 交付流程
 
-🌐 [个人网站](https://www.hehugo.com/) · 📧 [heyug3@gmail.com](mailto:heyug3@gmail.com) · 🐙 [@hugohe3](https://github.com/hugohe3)
+具体差异见 [游戏向魔改说明](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md)。
 
 ---
 
@@ -137,16 +140,13 @@ sudo apt install pandoc
 ### 3. 配置项目
 
 **方式 A — 下载 ZIP**（无需安装 Git）：
-[GitHub](https://github.com/hugohe3/ppt-master) → **Code → Download ZIP** · [AtomGit](https://atomgit.com/hugohe3/ppt-master) → **克隆/下载 → 下载ZIP**（国内网速更快）
+[GitHub](https://github.com/k412407009/game-ppt-master) → **Code → Download ZIP**
 
 **方式 B — Git clone**（需先安装 [Git](https://git-scm.com/downloads)）：
 
 ```bash
-# GitHub
-git clone https://github.com/hugohe3/ppt-master.git
-# AtomGit（国内网速更快）
-git clone https://atomgit.com/hugohe3/ppt-master.git
-cd ppt-master
+git clone https://github.com/k412407009/game-ppt-master.git
+cd game-ppt-master
 ```
 
 然后安装依赖：
@@ -213,9 +213,12 @@ GEMINI_MODEL=gemini-3.1-flash-image-preview
 
 | | 文档 | 说明 |
 |---|------|------|
-| 🆚 | [为什么选 PPT Master](./docs/zh/why-ppt-master.md) | 与 Gamma、Copilot 等工具的对比 |
+| 🆚 | [为什么选这套引擎](./docs/zh/why-ppt-master.md) | 上游 PPT 引擎与 Gamma、Copilot 等工具的对比 |
 | 🪟 | [Windows 安装指南](./docs/zh/windows-installation.md) | Windows 用户手把手安装教程 |
 | 📖 | [SKILL.md](./skills/ppt-master/SKILL.md) | 核心流程与规则 |
+| 🎮 | [游戏向魔改说明](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md) | 说明和上游 `ppt-master` 相比，这个仓库改了什么、保留了什么、为什么 GitHub repo 改名为 `game-ppt-master` |
+| 🤝 | [同事接入指南](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md) | 可直接转发给同事的下载、API Key、串联说明 |
+| 🧭 | [三仓协同架构](./docs/三仓协同架构_THREE_REPO_STACK.md) | `game-ppt-master`、`game-asset-collector`、`game-review` 的完整链路 |
 | 📐 | [画布格式](./skills/ppt-master/references/canvas-formats.md) | PPT 16:9、小红书、朋友圈等 10+ 种格式 |
 | 🛠️ | [脚本与工具](./skills/ppt-master/scripts/README.md) | 所有脚本和命令 |
 | 💼 | [示例](./examples/README.md) | 15 个项目，229 页 |
@@ -238,26 +241,11 @@ GEMINI_MODEL=gemini-3.1-flash-image-preview
 
 ## 联系与合作
 
-欢迎合作交流、将 PPT Master 集成到你的工作流，或者单纯提问：
+欢迎讨论 Game PPT Master 这个游戏行业改造版，或者查看上游底层引擎：
 
-- 💬 **提问与分享** — [GitHub Discussions](https://github.com/hugohe3/ppt-master/discussions)
-- 🐛 **Bug 反馈与功能建议** — [GitHub Issues](https://github.com/hugohe3/ppt-master/issues)
-- 📧 **商务 / 咨询 / 定制合作** — [heyug3@gmail.com](mailto:heyug3@gmail.com)
-- 🌐 **了解更多** — [www.hehugo.com](https://www.hehugo.com/)
-
----
-
-## Star History
-
-如果这个项目对你有帮助，请给一个 ⭐！
-
-<a href="https://star-history.com/#hugohe3/ppt-master&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hugohe3/ppt-master&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hugohe3/ppt-master&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hugohe3/ppt-master&type=Date" />
- </picture>
-</a>
+- 🐛 **Bug 反馈与功能建议** — [GitHub Issues](https://github.com/k412407009/game-ppt-master/issues)
+- 📦 **当前仓库** — [github.com/k412407009/game-ppt-master](https://github.com/k412407009/game-ppt-master)
+- 🧱 **上游底层引擎** — [github.com/hugohe3/ppt-master](https://github.com/hugohe3/ppt-master)
 
 ---
 
@@ -270,22 +258,6 @@ GEMINI_MODEL=gemini-3.1-flash-image-preview
   </a>
 </p>
 
----
+Made with ❤️ on top of [Hugo He 的上游引擎](https://github.com/hugohe3/ppt-master)
 
-## 赞助
-
-如果这个项目帮你省了时间，欢迎请我喝杯咖啡！
-
-**PayPal**
-
-<a href="https://paypal.me/hugohe3"><img src="https://img.shields.io/badge/PayPal-赞助-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="通过 PayPal 赞助" /></a>
-
-**支付宝**
-
-<img src="docs/assets/alipay-qr.jpg" alt="支付宝收款码" width="250" />
-
----
-
-Made with ❤️ by [何雨果 Hugo He](https://www.hehugo.com/)
-
-[⬆ 回到顶部](#ppt-master--ai-生成原生可编辑-pptx支持任意文档输入)
+[⬆ 回到顶部](#game-ppt-master--面向游戏行业的原生可编辑-pptx-工作流)

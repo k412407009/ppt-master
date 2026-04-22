@@ -2,9 +2,9 @@
 
 ## 这份文档是干什么的
 
-如果别人想完整复用这套能力，不是只下载一个 `ppt-master` 就结束了，而是至少需要 3 个同级仓库：
+如果别人想完整复用这套能力，不是只下载一个 `game-ppt-master` 就结束了，而是至少需要 3 个同级仓库：
 
-1. `ppt-master`：主工作流与 PPT 生成
+1. `game-ppt-master`：主工作流与 PPT 生成
 2. `game-asset-collector`：素材抓取、抽帧、视觉标签
 3. `game-review`：评审委员会、结构化打分与报告生成
 
@@ -21,7 +21,7 @@
 
 ```mermaid
 flowchart LR
-    A["Source Materials\nPDF / DOCX / URL / Markdown / Notes"] --> B["ppt-master\nsource_to_md + project workflow"]
+    A["Source Materials\nPDF / DOCX / URL / Markdown / Notes"] --> B["game-ppt-master\nsource_to_md + project workflow"]
     B --> C["Agent Orchestration Layer\nClaude / ChatGPT / other coding IDE model"]
     C --> D["Design Spec + PPT Pages\nSVG -> PPTX"]
     C --> E["game-asset-collector\nstore APIs + Tavily + yt-dlp + ffmpeg + ARK Vision"]
@@ -38,11 +38,11 @@ flowchart LR
 
 | 仓库 | 公开地址 | 角色 |
 | --- | --- | --- |
-| `ppt-master` | [github.com/k412407009/ppt-master](https://github.com/k412407009/ppt-master) | 主工作流与 PPT 生成 |
+| `game-ppt-master` | [github.com/k412407009/game-ppt-master](https://github.com/k412407009/game-ppt-master) | 主工作流与 PPT 生成 |
 | `game-asset-collector` | [github.com/k412407009/game-asset-collector](https://github.com/k412407009/game-asset-collector) | 共享素材采集器 |
 | `game-review` | [github.com/k412407009/game-review](https://github.com/k412407009/game-review) | 结构化评审模块 |
 
-### 1. `ppt-master`
+### 1. `game-ppt-master`
 
 主仓库，负责：
 
@@ -54,6 +54,12 @@ flowchart LR
 - 调用 `game-asset-collector` 作为 Step 4.5 的素材采集子流程
 
 它是**入口**，但不是所有子能力都自己实现。
+
+兼容说明：
+
+- GitHub repo 名字已经改成 `game-ppt-master`
+- 内部 skill 路径仍保留 `skills/ppt-master/...`
+- 这样可以保住现有脚本、skill 文档和项目命令，不做破坏性重命名
 
 ### 2. `game-asset-collector`
 
@@ -99,7 +105,7 @@ flowchart LR
 
 也就是说，Claude / ChatGPT 在这里是**工作流编排者**，不是固定绑定在某个 Python 文件里的单点 API。
 
-### B. `ppt-master` 内的直接模型/API
+### B. `game-ppt-master` 内的直接模型/API
 
 #### 文本与网页转换
 
@@ -168,7 +174,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A["Human / IDE Agent"] --> B["ppt-master"]
+    A["Human / IDE Agent"] --> B["game-ppt-master"]
     B --> C["curl_cffi / requests / Node fallback"]
     B --> D["pandoc"]
     B --> E["image_gen backends"]
@@ -197,16 +203,18 @@ flowchart TD
 
 ```text
 ~/Desktop/Git/
-  ppt-master/
+  game-ppt-master/
   game-asset-collector/
   game-review/
 ```
+
+如果你本机历史目录还叫 `ppt-master/`，当前桥接逻辑也兼容；但新同事建议直接按 `game-ppt-master/` clone。
 
 一键 clone 的最小命令：
 
 ```bash
 cd ~/Desktop/Git
-git clone https://github.com/k412407009/ppt-master.git
+git clone https://github.com/k412407009/game-ppt-master.git
 git clone https://github.com/k412407009/game-asset-collector.git
 git clone https://github.com/k412407009/game-review.git
 ```
@@ -221,7 +229,7 @@ git clone https://github.com/k412407009/game-review.git
 
 只需要：
 
-- `ppt-master`
+- `game-ppt-master`
 
 适合：
 
@@ -233,7 +241,7 @@ git clone https://github.com/k412407009/game-review.git
 
 需要：
 
-- `ppt-master`
+- `game-ppt-master`
 - `game-asset-collector`
 
 适合：
@@ -246,17 +254,17 @@ git clone https://github.com/k412407009/game-review.git
 
 需要全部三个仓：
 
-- `ppt-master`
+- `game-ppt-master`
 - `game-asset-collector`
 - `game-review`
 
 执行顺序：
 
-1. `ppt-master` 组织需求、项目和页面
+1. `game-ppt-master` 组织需求、项目和页面
 2. `game-asset-collector` 拉商店图、视频帧、标签和描述
 3. Agent / 人工补全 `review.json`
 4. `game-review` 生成 `docx` / `xlsx` / `md`
-5. 如需汇报，再回到 `ppt-master` 用报告与证据做最终 PPT
+5. 如需汇报，再回到 `game-ppt-master` 用报告与证据做最终 PPT
 
 ---
 
@@ -291,7 +299,7 @@ game-review review /ABS/PATH/to/workdir --mode external-game --with-visuals
 ### 3. 生成最终 PPT
 
 ```bash
-cd ppt-master
+cd game-ppt-master
 python3 skills/ppt-master/scripts/project_manager.py init my_project --format ppt169
 ```
 
@@ -327,13 +335,13 @@ python3 skills/ppt-master/scripts/project_manager.py init my_project --format pp
 
 如果别人要完整复用，不是下载一个仓，而是要把下面三个都 clone 到本地：
 
-1. `ppt-master`
+1. `game-ppt-master`
 2. `game-asset-collector`
 3. `game-review`
 
 其中：
 
-- `ppt-master` 是主入口
+- `game-ppt-master` 是主入口
 - `game-asset-collector` 是共享素材层
 - `game-review` 是共享评审层
 
