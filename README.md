@@ -203,6 +203,28 @@ Run `python3 skills/ppt-master/scripts/image_gen.py --list-backends` to see tier
 
 > **Tip:** For best quality, generate images in [Gemini](https://gemini.google.com/) and select **Download full size**. Remove the watermark with `scripts/gemini_watermark_remover.py`.
 
+### 6. Full Local Stack (3 Repos)
+
+If you want the complete local workflow instead of the PPT-only path, clone these three sibling repositories under the same parent directory:
+
+```text
+<workspace>/
+  ppt-master/             # main workflow + PPT generation
+  game-asset-collector/   # store / video asset collection
+  game-review/            # structured review report generation
+```
+
+Recommended order:
+
+1. Clone `ppt-master`
+2. Clone `game-asset-collector`
+3. Clone `game-review`
+
+Then read the full stack guide:
+
+- [Three-Repo Stack](./docs/三仓协同架构_THREE_REPO_STACK.md)
+- [Ecosystem Manifest](./docs/生态清单_ECOSYSTEM_MANIFEST.json)
+
 ---
 
 ## Documentation
@@ -212,6 +234,8 @@ Run `python3 skills/ppt-master/scripts/image_gen.py --list-backends` to see tier
 | 🆚 | [Why PPT Master](./docs/why-ppt-master.md) | How it compares to Gamma, Copilot, and other AI tools |
 | 🪟 | [Windows Installation](./docs/windows-installation.md) | Step-by-step setup guide for Windows users |
 | 📖 | [SKILL.md](./skills/ppt-master/SKILL.md) | Core workflow and rules |
+| 🧭 | [Three-Repo Stack](./docs/三仓协同架构_THREE_REPO_STACK.md) | End-to-end architecture, clone layout, model/API boundaries, and full workflow |
+| 🧩 | [Ecosystem Manifest](./docs/生态清单_ECOSYSTEM_MANIFEST.json) | Machine-readable module manifest for `ppt-master` + `game-asset-collector` + `game-review` |
 | 🎮 | [Game Review Closed Loop](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | How `ppt-master` hands off assets and review JSON into `game-review` |
 | 📐 | [Canvas Formats](./skills/ppt-master/references/canvas-formats.md) | PPT 16:9, Xiaohongshu, WeChat, and 10+ formats |
 | 🛠️ | [Scripts & Tools](./skills/ppt-master/scripts/README.md) | All scripts and commands |

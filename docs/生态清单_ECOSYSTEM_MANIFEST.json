@@ -1,0 +1,192 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-04-22",
+  "stack_name": "ppt-master-local-stack",
+  "workspace_layout": {
+    "type": "sibling_repos",
+    "recommended_root": "~/Desktop/Git",
+    "repos": [
+      "ppt-master",
+      "game-asset-collector",
+      "game-review"
+    ]
+  },
+  "modules": [
+    {
+      "id": "ppt-master",
+      "role": "main_workflow",
+      "repo_url": "https://github.com/k412407009/ppt-master",
+      "local_dir": "ppt-master",
+      "visibility": "public",
+      "required": true,
+      "entrypoints": [
+        "README.md",
+        "skills/ppt-master/SKILL.md",
+        "skills/ppt-master/scripts/project_manager.py",
+        "skills/ppt-master/scripts/image_gen.py"
+      ],
+      "depends_on": [
+        "game-asset-collector"
+      ],
+      "optional_depends_on": [
+        "game-review"
+      ],
+      "outputs": [
+        "design_spec.md",
+        "exports/*.pptx",
+        "images/_game_assets_meta/*.image_resource_list.md"
+      ]
+    },
+    {
+      "id": "game-asset-collector",
+      "role": "shared_asset_collection",
+      "repo_url": "https://github.com/k412407009/game-asset-collector",
+      "local_dir": "game-asset-collector",
+      "visibility": "public",
+      "required": true,
+      "entrypoints": [
+        "README.md",
+        "scripts/fetch_game_assets.py",
+        "game_asset_collector/fetch_game_assets.py"
+      ],
+      "depends_on": [],
+      "optional_depends_on": [],
+      "outputs": [
+        "raw_assets/<game>/store/**",
+        "raw_assets/<game>/gameplay/frames/**",
+        "raw_assets/<game>/gameplay/labels.json",
+        "raw_assets/<game>/gameplay/descriptions.json",
+        "raw_assets/<game>/metadata.json"
+      ]
+    },
+    {
+      "id": "game-review",
+      "role": "structured_review_reports",
+      "repo_url": "https://github.com/k412407009/game-review",
+      "local_dir": "game-review",
+      "visibility": "public",
+      "required": true,
+      "entrypoints": [
+        "README.md",
+        "skills/game-review/SKILL.md",
+        "game_review/cli.py"
+      ],
+      "depends_on": [
+        "game-asset-collector"
+      ],
+      "optional_depends_on": [
+        "ppt-master"
+      ],
+      "outputs": [
+        "review/*_review.docx",
+        "review/*_review.xlsx",
+        "review/*_subjective_responses.md"
+      ]
+    }
+  ],
+  "model_and_api_layers": [
+    {
+      "layer": "orchestration",
+      "type": "ide_agent_model",
+      "providers": [
+        "Claude",
+        "ChatGPT/Codex",
+        "other coding IDE models"
+      ],
+      "notes": "Reads SKILL docs and decides which scripts to run."
+    },
+    {
+      "layer": "source_ingestion",
+      "type": "deterministic_tools",
+      "providers": [
+        "curl_cffi",
+        "requests",
+        "pandoc",
+        "Node fallback"
+      ],
+      "notes": "Used by ppt-master for source-to-Markdown conversion."
+    },
+    {
+      "layer": "image_generation",
+      "type": "direct_model_api",
+      "providers": [
+        "Gemini",
+        "OpenAI",
+        "Qwen",
+        "Zhipu",
+        "Volcengine",
+        "Stability",
+        "BFL",
+        "Ideogram",
+        "MiniMax",
+        "SiliconFlow",
+        "fal",
+        "Replicate"
+      ],
+      "notes": "Configured through IMAGE_BACKEND in ppt-master."
+    },
+    {
+      "layer": "asset_collection",
+      "type": "api_and_media_tools",
+      "providers": [
+        "App Store API",
+        "google_play_scraper",
+        "Steam API",
+        "Tavily",
+        "yt-dlp",
+        "ffmpeg",
+        "ARK / Volcengine Vision"
+      ],
+      "notes": "Implemented in game-asset-collector."
+    },
+    {
+      "layer": "review_generation",
+      "type": "review_llm_provider",
+      "providers": [
+        "Compass",
+        "future Volcengine-compatible provider",
+        "future OpenAI-compatible provider"
+      ],
+      "notes": "Currently Compass first, local stub fallback."
+    }
+  ],
+  "recommended_flows": [
+    {
+      "id": "ppt_only",
+      "requires": [
+        "ppt-master"
+      ],
+      "steps": [
+        "Convert source materials to Markdown",
+        "Generate design spec and SVG pages",
+        "Export native PPTX"
+      ]
+    },
+    {
+      "id": "ppt_plus_assets",
+      "requires": [
+        "ppt-master",
+        "game-asset-collector"
+      ],
+      "steps": [
+        "Collect store screenshots and gameplay frames",
+        "Generate image resource list",
+        "Use collected assets in PPT"
+      ]
+    },
+    {
+      "id": "full_review_loop",
+      "requires": [
+        "ppt-master",
+        "game-asset-collector",
+        "game-review"
+      ],
+      "steps": [
+        "Collect assets",
+        "Prepare review.json",
+        "Generate review reports",
+        "Feed review outputs back into PPT if needed"
+      ]
+    }
+  ]
+}

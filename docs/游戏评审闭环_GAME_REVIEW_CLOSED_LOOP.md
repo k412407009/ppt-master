@@ -2,7 +2,7 @@
 
 ## 这份文档是干什么的
 
-这不是一份单独的脚本说明，而是把 `ppt-master` 和 `game-review` 两个仓库之间的协作边界、输入输出和复现要求固化下来。
+这不是一份单独的脚本说明，而是把 `ppt-master`、`game-asset-collector` 和 `game-review` 三个仓库之间的协作边界、输入输出和复现要求固化下来。
 
 适用两类场景：
 
@@ -11,7 +11,7 @@
 
 ---
 
-## 两个仓库各自负责什么
+## 三个仓库各自负责什么
 
 ### `ppt-master`
 
@@ -20,13 +20,26 @@
 - 源材料转 Markdown
 - 设计规格与大纲
 - PPT 原生编辑页生成
-- 外部游戏素材抓取
-- 视频抽帧、画面标签和图像资源清单
+- 调用共享采集器并消费素材结果
 
 核心入口：
 
 - [`skills/ppt-master/SKILL.md`](../skills/ppt-master/SKILL.md)
-- [`skills/ppt-master/scripts/game_assets/fetch_game_assets.py`](../skills/ppt-master/scripts/game_assets/fetch_game_assets.py)
+- [`docs/三仓协同架构_THREE_REPO_STACK.md`](./三仓协同架构_THREE_REPO_STACK.md)
+
+### `game-asset-collector`
+
+负责共享素材层：
+
+- 商店截图抓取
+- gameplay 视频下载与抽帧
+- 标签与中文描述生成
+- 统一 `raw_assets` 结构
+
+核心入口：
+
+- [../../game-asset-collector/README.md](../../game-asset-collector/README.md)
+- [../../game-asset-collector/scripts/fetch_game_assets.py](../../game-asset-collector/scripts/fetch_game_assets.py)
 
 ### `game-review`
 
@@ -66,7 +79,7 @@
 
 ```text
 游戏名 / 商店包名 / 商店 URL / 视频 URL
-  -> ppt-master fetch_game_assets
+  -> game-asset-collector fetch_game_assets
   -> raw_assets + labels.json + descriptions.json + metadata.json
   -> AI / 人工补全 review.json
   -> game-review --mode external-game --with-visuals
@@ -88,7 +101,7 @@
 ### 1. 先收素材
 
 ```bash
-python3 skills/ppt-master/scripts/game_assets/fetch_game_assets.py "<game name>" \
+python3 ../game-asset-collector/scripts/fetch_game_assets.py "<game name>" \
   --project <project_path> \
   --gplay-id <google_play_package?> \
   --appstore-id <app_store_id?> \
@@ -100,7 +113,7 @@ python3 skills/ppt-master/scripts/game_assets/fetch_game_assets.py "<game name>"
 如果自动视频搜索抓错，直接改用手动视频入口：
 
 ```bash
-python3 skills/ppt-master/scripts/game_assets/fetch_game_assets.py "<game name>" \
+python3 ../game-asset-collector/scripts/fetch_game_assets.py "<game name>" \
   --project <project_path> \
   --video https://www.youtube.com/watch?v=<id> \
   --video <bilibili_BV_id> \
