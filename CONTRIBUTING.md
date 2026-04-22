@@ -1,62 +1,61 @@
-# Contributing to PPT Master
+# 贡献说明
 
-Thank you for your interest in contributing! This guide will help you get started.
+欢迎提交改进。
 
-## Ways to Contribute
+这个仓库当前面向中文用户维护，提交前请优先遵循下面几条：
 
-- **Templates** — New layout templates or visual styles
-- **Charts** — Additional chart types or SVG chart templates
-- **Icons** — Vector icons for the icon library
-- **Scripts** — Improvements to conversion or post-processing scripts
-- **Docs** — Clarifications, translations, or new guides
-- **Bug reports** — Reproducible issues with clear descriptions
-- **Ideas** — Feature requests and design suggestions
+## 可以贡献什么
 
-## Getting Started
+- 新模板或版式
+- 图表与 SVG 资产
+- 脚本改进
+- 文档补充与纠错
+- Bug 反馈
+- 新的工作流建议
 
-### Prerequisites
+## 提交前建议
 
-- Python 3.10+
-- Node.js 18+ (optional, for WeChat page conversion)
-- Pandoc (optional, for DOCX/EPUB conversion)
+1. 从 `main` 拉新分支。
+2. 改动尽量聚焦，不要把无关修改混在一起。
+3. 如果改了脚本或流程，请补最小验证说明。
+4. 如果改了公开入口文档，请保持中文优先。
 
-### Setup
+## SVG 相关约束
 
-```bash
-git clone https://github.com/hugohe3/ppt-master.git
-cd ppt-master
-pip install -r requirements.txt
-```
+如果你的改动涉及 SVG，请先看：
 
-## Contribution Workflow
+- [CLAUDE.md](./CLAUDE.md)
+- [skills/ppt-master/references/shared-standards.md](./skills/ppt-master/references/shared-standards.md)
 
-1. **Fork** the repository and create a branch from `main`
-2. **Make your changes** — keep commits focused and descriptive
-3. **Test** your changes locally before submitting
-4. **Open a Pull Request** with a clear description of what you changed and why
+尤其注意：
 
-## SVG Guidelines
+- 不要使用 `clipPath`、`mask`、`foreignObject`、外部 CSS、`<script>`
+- 用 `fill-opacity` / `stroke-opacity`，不要直接依赖 `rgba()`
+- 画布尺寸和 `viewBox` 必须正确
 
-If your contribution involves SVG files, follow the technical constraints documented in [CLAUDE.md](./CLAUDE.md):
+## Bug 反馈建议
 
-- Do not use: `clipPath`, `mask`, `<style>`, `class`, external CSS, `<foreignObject>`, `<animate*>`, `<script>`, `<symbol>+<use>`
-- Use `fill-opacity` / `stroke-opacity` instead of `rgba()`
-- `marker-start` / `marker-end` are conditionally allowed — see `shared-standards.md` §1.1 for the constraints (must live in `<defs>`, `orient="auto"`, shape must be triangle / diamond / oval)
-- All SVGs must use the correct `viewBox` for the target canvas format
+提 issue 时请尽量带上：
 
-## Reporting Bugs
+- 问题现象
+- 复现步骤
+- 预期结果与实际结果
+- 环境信息：系统、Python 版本、使用的 AI IDE
 
-Open an issue on [GitHub Issues](https://github.com/hugohe3/ppt-master/issues) and include:
+问题入口：
 
-- A clear description of the problem
-- Steps to reproduce
-- Expected vs. actual behavior
-- Environment details (OS, Python version, AI editor used)
+- [GitHub Issues](https://github.com/k412407009/game-ppt-master/issues)
 
-## Code of Conduct
+## 行为约束
 
-Please read and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
+请遵循：
 
-## License
+- [行为准则](./CODE_OF_CONDUCT.md)
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](./LICENSE).
+## 开源协议
+
+提交代码即表示你同意按：
+
+- [MIT License](./LICENSE)
+
+进行开源。

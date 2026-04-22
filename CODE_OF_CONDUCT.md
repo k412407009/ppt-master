@@ -1,90 +1,52 @@
-# Code of Conduct
+# 行为准则
 
-## Our Commitment
+我们希望这个仓库保持一个尊重、克制、可协作的开源环境。
 
-We want PPT Master to be a welcoming, respectful, and professional open-source community for everyone.
+## 我们鼓励的行为
 
-As maintainers, contributors, and participants, we are committed to making participation in this project harassment-free for all people, regardless of age, body size, disability, ethnicity, sex characteristics, gender identity or expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
+- 尊重他人时间和表达
+- 聚焦问题本身，不做人身攻击
+- 以可复现、可验证的方式讨论技术问题
+- 接受反馈，也愿意修正自己的错误
+- 让讨论对项目推进有帮助
 
-We aim to build a community where people can collaborate constructively, share ideas openly, and contribute safely.
+## 不接受的行为
 
-## Expected Behavior
+- 骚扰、威胁、歧视、羞辱
+- 持续性的恶意挑衅或引战
+- 泄露他人隐私信息
+- 在 issue、PR、讨论区进行敌意交流
+- 任何明显破坏社区协作秩序的行为
 
-Examples of behavior that help create a positive community include:
+## 适用范围
 
-- Showing empathy, patience, and kindness toward others
-- Respecting different opinions, experiences, and viewpoints
-- Giving and receiving constructive feedback professionally
-- Taking responsibility for mistakes and learning from them
-- Focusing on what benefits the project and its community
+本准则适用于：
 
-## Unacceptable Behavior
-
-Examples of unacceptable behavior include:
-
-- Harassment, intimidation, threats, or stalking
-- Insulting, demeaning, or discriminatory comments
-- Personal attacks or hostile interactions
-- Sexualized language, imagery, or unwanted sexual attention
-- Trolling, deliberate provocation, or repeated bad-faith arguments
-- Publishing someone’s private information without permission, including physical or email addresses
-- Any other conduct that would reasonably be considered inappropriate in a professional community setting
-
-## Scope
-
-This Code of Conduct applies in all project spaces, including but not limited to:
-
-- GitHub issues
-- Pull requests
+- GitHub Issues
+- Pull Requests
 - Discussions
-- Project documentation
-- Community chat or social spaces associated with the project
-- Public interactions where someone is representing the project
+- 项目文档
+- 与本项目直接相关的公开交流场景
 
-## Reporting
+## 举报方式
 
-If you experience or witness behavior that violates this Code of Conduct, please report it to:
+如遇到违反本准则的行为，请联系：
 
-**heyug3@gmail.com**
+- `heyug3@gmail.com`
 
-Please include, when possible:
+如果可以，请附上：
 
-- A description of the incident
-- Where it happened
-- Links, screenshots, or other relevant evidence
-- Any other context that may help review the report
+- 发生了什么
+- 发生位置
+- 链接、截图或其他证据
 
-All reports will be reviewed as promptly and fairly as possible. We will make a good-faith effort to protect the privacy and safety of the reporter.
+## 维护者处理方式
 
-## Enforcement
+维护者会根据情况决定处理措施，包括但不限于：
 
-Project maintainers are responsible for interpreting and enforcing this Code of Conduct.
+- 提醒或要求修正
+- 删除评论、Issue、PR 或相关内容
+- 临时限制参与
+- 永久封禁
 
-Maintainers may take any action they believe is appropriate in response to behavior that violates this policy, including:
-
-- Asking for correction
-- Issuing a warning
-- Removing comments, issues, commits, or other contributions
-- Temporarily restricting participation
-- Permanently banning participation in project spaces
-
-Enforcement decisions will be made with the goal of protecting the community and maintaining a healthy working environment.
-
-## Enforcement Principles
-
-When deciding how to respond, maintainers may consider:
-
-- The seriousness of the behavior
-- Whether the behavior is repeated
-- Whether the behavior appears intentional
-- The impact on individuals and the broader community
-
-Possible responses may range from a private warning to a temporary or permanent ban, depending on the circumstances.
-
-## Maintainer Responsibility
-
-Maintainers are expected to enforce this Code of Conduct consistently and in good faith. They should communicate moderation decisions clearly when appropriate and act in a way that supports a safe, respectful, and collaborative community.
-
-## Attribution
-
-This Code of Conduct is based on the principles of Contributor Covenant version 2.1. The official Contributor Covenant materials and adoption guidance are available on the Contributor Covenant website.
+处理目标是保护协作环境，而不是扩大冲突。

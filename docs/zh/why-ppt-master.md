@@ -1,8 +1,4 @@
-# 为什么选 PPT Master
-
-[English](../why-ppt-master.md) | [中文](./why-ppt-master.md)
-
----
+# 为什么选 Game PPT Master
 
 市面上有几十款 AI PPT 工具。这个页面说清楚 PPT Master 到底哪里不一样——以及它在哪些场景下不是最佳选择。
 
@@ -77,7 +73,7 @@ PPT Master 是一个框架，不是某个 IDE 的插件。**编辑器方面**，
 
 ---
 
-## PPT Master 不适合的场景
+## Game PPT Master 不适合的场景
 
 诚实地说清楚短板：
 

@@ -1,10 +1,8 @@
-# Game PPT Master Windows 安装指南
+# Windows 安装指南
 
 本指南将手把手教你在 Windows 上安装 Game PPT Master。按顺序操作，10 分钟内即可跑通第一份 PPT。
 
----
-
-## Step 1 — 安装 Python（必须）
+## 第一步：安装 Python（必须）
 
 Python 是唯一的硬性要求。
 
@@ -26,7 +24,7 @@ Python 是唯一的硬性要求。
 
 ---
 
-## Step 2 — 下载项目
+## 第二步：下载项目
 
 **方式 A — 下载 ZIP**（最简单）：
 
@@ -43,7 +41,7 @@ cd game-ppt-master
 
 ---
 
-## Step 3 — 安装依赖
+## 第三步：安装依赖
 
 ```powershell
 cd C:\Users\你的用户名\game-ppt-master   # ← 替换为你的实际路径
@@ -56,7 +54,7 @@ pip install -r requirements.txt
 
 ---
 
-## Step 4 — 验证安装
+## 第四步：验证安装
 
 ```powershell
 python -c "import pptx; import fitz; print('All core dependencies OK')"
@@ -68,7 +66,7 @@ python -c "import pptx; import fitz; print('All core dependencies OK')"
 
 ---
 
-## Step 5 — 跑一个最小示例
+## 第五步：跑一个最小示例
 
 打开你的 AI 编辑器（Cursor、VS Code + Copilot 等），打开 `game-ppt-master` 目录，在聊天面板输入：
 
@@ -80,7 +78,7 @@ python -c "import pptx; import fitz; print('All core dependencies OK')"
 
 ---
 
-## Step 6 — 可选增强（大多数用户可以跳过）
+## 第六步：可选增强（大多数用户可以跳过）
 
 装好 Python 和 `requirements.txt` 后，生成 PPT 的全部功能已经就绪。下面是**边缘场景的备用方案和增强项**——只有遇到对应的具体场景才需要装。
 
@@ -150,7 +148,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ## 还是搞不定？
 
-- 📖 [常见问题 (FAQ)](./faq.md)
+- 📖 [常见问题](./faq.md)
 - 🐛 [GitHub Issues](https://github.com/k412407009/game-ppt-master/issues) — 附上 Python 版本、Windows 版本和完整报错
 - 📦 [仓库首页](https://github.com/k412407009/game-ppt-master)
 - 🧱 [上游底层引擎](https://github.com/hugohe3/ppt-master)

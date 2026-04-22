@@ -1,45 +1,40 @@
-# Security Policy
+# 安全说明
 
-## Supported Versions
+## 支持范围
 
-We provide security updates for the latest version of PPT Master.
+当前只为仓库最新版本处理安全问题。历史旧版本一般不单独回补。
 
-| Version | Supported |
-|---------|-----------|
-| Latest  | Yes       |
-| Older   | No        |
+## 漏洞反馈方式
 
-## Reporting a Vulnerability
+**不要通过公开 GitHub Issue 提交安全漏洞。**
 
-**Please do not report security vulnerabilities through public GitHub Issues.**
+如果你发现了安全问题，请私下发送邮件到：
 
-If you discover a security issue, please report it privately by emailing:
+- `heyug3@gmail.com`
 
-**heyug3@gmail.com**
+建议在邮件里带上：
 
-Include in your report:
+- 漏洞描述
+- 复现步骤
+- 潜在影响
+- 如果你已经有判断，也可以附上修复建议
 
-- A description of the vulnerability
-- Steps to reproduce the issue
-- The potential impact
-- Any suggested fix, if you have one
+## 覆盖范围
 
-We will acknowledge your report within **72 hours** and aim to provide a resolution timeline within **7 days**.
+本说明主要覆盖当前仓库中的源码与脚本，包括：
 
-## Scope
+- `skills/ppt-master/scripts/` 下的脚本
+- SVG 后处理与 PPTX 导出链路
+- 项目管理与文档转换脚本
 
-This policy covers the PPT Master source code in this repository, including:
+以下内容不在本仓库安全响应范围内：
 
-- Python scripts in `skills/ppt-master/scripts/`
-- Post-processing pipeline (`total_md_split.py`, `finalize_svg.py`, `svg_to_pptx.py`)
-- Project management utilities
+- 第三方 AI IDE 或第三方模型平台
+- 用户自己提供的源文件
+- 已生成的 PPT / DOC / XLS 产物本身
 
-Out of scope:
+## 处理原则
 
-- Third-party AI editors or APIs (Claude, Cursor, GitHub Copilot, etc.)
-- Generated PPTX output files
-- User-provided source documents
-
-## Disclosure Policy
-
-We follow responsible disclosure. Once a fix is available, we will publish a GitHub Security Advisory crediting the reporter (unless they prefer to remain anonymous).
+- 默认按负责任披露原则处理
+- 收到反馈后会尽快确认问题
+- 修复可公开时，再统一说明或发布更新
