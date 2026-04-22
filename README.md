@@ -1,298 +1,175 @@
-# Game PPT Master — AI generates natively editable PPTX for game-industry decks
+# Game PPT Master
 
-[![Version](https://img.shields.io/badge/version-v2.3.0-blue.svg)](https://github.com/k412407009/game-ppt-master/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/k412407009/game-ppt-master.svg)](https://github.com/k412407009/game-ppt-master/stargazers)
+面向游戏行业的本地 PPT 工作流。
 
-English | [中文](./README_CN.md)
+输入 PDF、DOCX、网页或 Markdown，输出真正可编辑的 `.pptx`。如果需要完整链路，还可以和 `game-asset-collector`、`game-review` 组合，完成素材抓取、结构化评审和最终汇报。
 
-<p align="center">
-  <a href="./docs/三仓协同架构_THREE_REPO_STACK.md"><strong>Three-Repo Stack</strong></a> ·
-  <a href="./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md"><strong>Game Customization Notes</strong></a> ·
-  <a href="./examples/"><strong>Examples</strong></a> ·
-  <a href="./docs/faq.md"><strong>FAQ</strong></a> ·
-  <a href="https://github.com/k412407009/game-ppt-master/issues"><strong>Issues</strong></a>
-</p>
+## 这是什么
 
-> **Repository positioning** — Game PPT Master is a public, game-focused derivative of upstream [hugohe3/ppt-master](https://github.com/hugohe3/ppt-master). The base editable PPTX engine stays compatible with upstream, while this repo adds game-specific workflow, shared asset collection, and structured review handoff. See [Game Customization Notes](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md).
+这个仓库解决 3 件事：
 
----
+- 把原始资料整理成可编辑 PPT，而不是图片或网页截图
+- 把游戏行业常见场景串起来：立项、竞品、拆解、评审、汇报
+- 作为三仓体系的主入口，衔接采集器和评审模块
 
-Drop in a PDF, DOCX, URL, or Markdown — get back a **natively editable PowerPoint** with real shapes, real text boxes, and real charts. Then keep going into game-specific asset collection, review production, and final deck output.
+## 仓库定位
 
-> **How it works** — Game PPT Master is a workflow (a "skill") that works inside AI IDEs like Claude Code, Cursor, VS Code + Copilot, or Codebuddy. You chat with the AI — "make a game deck from this PDF" — and it follows the workflow to produce a real editable `.pptx` on your computer. No coding on your side; the IDE is just where the conversation happens.
->
-> **What you'll do**: install Python, install an AI IDE, drop in your material. First-time setup is about 15 minutes. Each deck takes ~10–20 minutes of back-and-forth with the AI.
+- GitHub 公开仓名：`game-ppt-master`
+- 本地推荐目录名：`game-ppt-master/`
+- 内部兼容路径仍保留：`skills/ppt-master/...`
+- 底层可编辑 PPTX 引擎来自上游 [hugohe3/ppt-master](https://github.com/hugohe3/ppt-master)
 
-**[Why this engine?](./docs/why-ppt-master.md)**
+为什么保留内部 `skills/ppt-master/...` 路径：
 
-There's no shortage of AI presentation tools — what's missing is one where the output is **actually usable as a real PowerPoint file**. I build presentations every day, but most tools export images or web screenshots: they look nice but you can't edit anything. Others produce bare-bones text boxes and bullet lists. And they all want a monthly subscription, upload your files to their servers, and lock you into their platform.
+- 现有脚本、项目提示词和下游桥接大量依赖这条路径
+- 先把公开入口统一成 `game-ppt-master`，风险更低
+- 兼容策略详见 [游戏向魔改说明](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md)
 
-Game PPT Master is different:
+## 适合什么场景
 
-- **Real PowerPoint** — if a file can't be opened and edited in PowerPoint, it shouldn't be called a PPT. Every element PPT Master outputs is directly clickable and editable
-- **Game-industry workflow** — this repo adds collector handoff, game-review integration, and a repeatable game deck / review loop on top of the base PPT engine
-- **Transparent, predictable cost** — the tool is free and open source; the only cost is your own AI editor, and you know exactly what you're paying. As low as **$0.08/deck** with VS Code Copilot
-- **Data stays local** — your files shouldn't have to be uploaded to someone else's server just to make a presentation. Apart from AI model communication, the entire pipeline runs on your machine
-- **No platform lock-in** — your workflow shouldn't be held hostage by any single company. Works with Claude Code, Cursor, VS Code Copilot, and more; supports Claude, GPT, Gemini, Kimi, and other models
+- 游戏立项汇报
+- 竞品分析和拆解
+- 外部游戏评审结果回灌成 PPT
+- 把 PDF、DOCX、网页快速整理成结构化 deck
 
-**[See base-engine examples →](https://hugohe3.github.io/ppt-master/)** · [`examples/`](./examples/) — 15 projects, 229 pages
+## 最小安装
 
-## Gallery
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/preview_magazine_garden.png" alt="Magazine style — Garden building guide" /><br/><sub><b>Magazine</b> — warm earthy tones, photo-rich layout</sub></td>
-    <td align="center"><img src="docs/assets/screenshots/preview_academic_medical.png" alt="Academic style — Medical image segmentation research" /><br/><sub><b>Academic</b> — structured research format, data-driven</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/preview_dark_art_mv.png" alt="Dark art style — Music video analysis" /><br/><sub><b>Dark Art</b> — cinematic dark background, gallery aesthetic</sub></td>
-    <td align="center"><img src="docs/assets/screenshots/preview_nature_wildlife.png" alt="Nature style — Wildlife wetland documentary" /><br/><sub><b>Nature Documentary</b> — immersive photography, minimal UI</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/preview_tech_claude_plans.png" alt="Tech style — Claude AI subscription plans" /><br/><sub><b>Tech / SaaS</b> — clean white cards, pricing table layout</sub></td>
-    <td align="center"><img src="docs/assets/screenshots/preview_launch_xiaomi.png" alt="Product launch style — Xiaomi spring release" /><br/><sub><b>Product Launch</b> — high contrast, bold specs highlight</sub></td>
-  </tr>
-</table>
-
----
-
-## Upstream Foundation
-
-The native editable PPTX engine and the original `ppt-master` workflow were created by [Hugo He](https://github.com/hugohe3/ppt-master). That upstream work is still the technical foundation of this repository.
-
-Game PPT Master is the game-industry adaptation layer on top of that foundation. This public repo focuses on:
-
-- external game asset collection handoff
-- structured game review production
-- a three-repo local stack with `game-asset-collector` and `game-review`
-- game-oriented project prompts and delivery flow
-
-For the full delta from upstream, read [Game Customization Notes](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md).
-
----
-
-## Quick Start
-
-### 1. Prerequisites
-
-**You only need Python.** Everything else is installed via `pip install -r requirements.txt`.
-
-| Dependency | Required? | What it does |
-|------------|:---------:|--------------|
-| [Python](https://www.python.org/downloads/) 3.10+ | ✅ **Yes** | Core runtime — the only thing you actually need to install |
-
-> **TL;DR** — Install Python, run `pip install -r requirements.txt`, and you're ready to generate presentations.
-
-<details open>
-<summary><strong>Windows</strong> — see the dedicated step-by-step guide ⚠️</summary>
-
-Windows requires a few extra steps (PATH setup, execution policy, etc.). We wrote a **step-by-step guide** specifically for Windows users:
-
-**📖 [Windows Installation Guide](./docs/windows-installation.md)** — from zero to a working presentation in 10 minutes.
-
-Quick version: download Python from [python.org](https://www.python.org/downloads/) → **check "Add to PATH"** during install → `pip install -r requirements.txt` → done.
-</details>
-
-<details>
-<summary><strong>macOS / Linux</strong> — install and go</summary>
-
-```bash
-# macOS
-brew install python
-pip install -r requirements.txt
-
-# Ubuntu / Debian
-sudo apt install python3 python3-pip
-pip install -r requirements.txt
-```
-</details>
-
-<details>
-<summary><strong>Edge-case fallbacks</strong> — 99% of users don't need these</summary>
-
-Two external tools exist as fallbacks for edge cases. **Most users will never need them** — install only if you hit one of the specific scenarios below.
-
-| Fallback | Install only if… |
-|----------|-----------------|
-| [Node.js](https://nodejs.org/) 18+ | You need to import WeChat Official Account articles **and** `curl_cffi` (part of `requirements.txt`) has no prebuilt wheel for your Python + OS + CPU combination. In normal setups `web_to_md.py` handles WeChat directly through `curl_cffi`. |
-| [Pandoc](https://pandoc.org/) | You need to convert legacy formats: `.doc`, `.odt`, `.rtf`, `.tex`, `.rst`, `.org`, or `.typ`. `.docx`, `.html`, `.epub`, `.ipynb` are handled natively by Python — no pandoc required. |
-
-```bash
-# macOS (only if the above conditions apply)
-brew install node
-brew install pandoc
-
-# Ubuntu / Debian
-sudo apt install nodejs npm
-sudo apt install pandoc
-```
-</details>
-
-### 2. Pick an AI Editor
-
-| Tool | Rating | Notes |
-|------|:------:|-------|
-| **[Claude Code](https://claude.ai/)** | ⭐⭐⭐ | Best results — native Opus, largest context |
-| [Cursor](https://cursor.sh/) / [VS Code + Copilot](https://code.visualstudio.com/) | ⭐⭐ | Good alternatives |
-| Codebuddy IDE | ⭐⭐ | Best for Chinese models (Kimi 2.5, MiniMax 2.7) |
-
-### 3. Set Up
-
-**Option A — Download ZIP** (no Git required): click **Code → Download ZIP** on the [GitHub page](https://github.com/k412407009/game-ppt-master), then unzip.
-
-**Option B — Git clone** (requires [Git](https://git-scm.com/downloads) installed):
+只需要先装 Python 3.10+。
 
 ```bash
 git clone https://github.com/k412407009/game-ppt-master.git
 cd game-ppt-master
-```
-
-Then install dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
-To update later (Option B only): `python3 skills/ppt-master/scripts/update_repo.py`
+Windows 用户建议直接看：
 
-### 4. Create
+- [Windows 安装指南](./docs/zh/windows-installation.md)
 
-**Provide source materials (recommended):** Place your PDF, DOCX, images, or other files in the `projects/` directory, then tell the AI chat panel which files to use. The quickest way to get the path: right-click the file in your file manager or IDE sidebar → **Copy Path** (or **Copy Relative Path**) and paste it directly into the chat.
+## 最快使用方式
 
-```
-You: Please create a PPT from projects/q3-report/sources/report.pdf
-```
+1. 把源文件放进 `projects/` 目录。
+2. 在你使用的 AI IDE 里打开本仓库。
+3. 让 AI 先读取 `skills/ppt-master/SKILL.md`。
+4. 告诉它使用哪份资料生成 PPT。
 
-**Paste content directly:** You can also paste text content straight into the chat window and the AI will generate a PPT from it.
+示例：
 
-```
-You: Please turn the following into a PPT: [paste your content here...]
-```
-
-Either way, the AI will first confirm the design spec:
-
-```
-AI:  Sure. Let's confirm the design spec:
-     [Template] B) Free design
-     [Format]   PPT 16:9
-     [Pages]    8-10 pages
-     ...
+```text
+请先阅读 skills/ppt-master/SKILL.md。
+然后用 projects/q3-report/sources/report.pdf 生成一份 10 页左右的游戏行业汇报 PPT。
 ```
 
-The AI handles everything — content analysis, visual design, SVG generation, and PPTX export.
+输出文件会落在 `exports/`。
 
-> **Output:** Two timestamped files are saved to `exports/` — a native-shapes `.pptx` (directly editable) and an `_svg.pptx` snapshot for visual reference. Requires Office 2016+.
+## 推荐编辑器
 
-> **AI lost context?** Ask it to read `skills/ppt-master/SKILL.md`.
+- `Claude Code`：效果最好
+- `Cursor`
+- `VS Code + Copilot`
+- `Codebuddy`
 
-> **Something went wrong?** Check the **[FAQ](./docs/faq.md)** — it covers model selection, layout issues, export problems, and more. Continuously updated from real user reports.
+核心原则不是绑定某个 IDE，而是让模型按 `SKILL.md` 跑完整流程。
 
-### 5. AI Image Generation (Optional)
+## 可选：AI 生图
+
+如果你要在 PPT 里补图，可以配置 `.env`：
 
 ```bash
-cp .env.example .env    # then edit with your API key
+cp .env.example .env
 ```
 
 ```env
-IMAGE_BACKEND=gemini                        # required — must be set explicitly
+IMAGE_BACKEND=gemini
 GEMINI_API_KEY=your-api-key
 GEMINI_MODEL=gemini-3.1-flash-image-preview
 ```
 
-Supported backends: `gemini` · `openai` · `qwen` · `zhipu` · `volcengine` · `stability` · `bfl` · `ideogram` · `siliconflow` · `fal` · `replicate`
+支持的后端包括：
 
-Run `python3 skills/ppt-master/scripts/image_gen.py --list-backends` to see tiers. Environment variables override `.env`. Use provider-specific keys (`GEMINI_API_KEY`, `OPENAI_API_KEY`, etc.) — global `IMAGE_API_KEY` is not supported.
+- `gemini`
+- `openai`
+- `qwen`
+- `zhipu`
+- `volcengine`
+- `stability`
+- `bfl`
+- `ideogram`
+- `siliconflow`
+- `fal`
+- `replicate`
 
-> **Tip:** For best quality, generate images in [Gemini](https://gemini.google.com/) and select **Download full size**. Remove the watermark with `scripts/gemini_watermark_remover.py`.
+查看后端说明：
 
-### 6. Full Local Stack (3 Repos)
+```bash
+python3 skills/ppt-master/scripts/image_gen.py --list-backends
+```
 
-If you want the complete local workflow instead of the PPT-only path, clone these three sibling repositories under the same parent directory:
+## 完整链路：三仓协同
+
+如果你不仅要做 PPT，还要做素材抓取和结构化评审，推荐把 3 个仓库放在同级目录：
 
 ```text
 <workspace>/
-  game-ppt-master/        # main workflow + PPT generation
-  game-asset-collector/   # store / video asset collection
-  game-review/            # structured review report generation
+  game-ppt-master/
+  game-asset-collector/
+  game-review/
 ```
 
-Internal compatibility note:
+三者分工：
 
-- The public repo name is `game-ppt-master`
-- The internal skill path remains `skills/ppt-master/...`
-- Do not rename the internal `skills/ppt-master` directory unless you also update downstream scripts
+- `game-ppt-master`：主工作流、PPT 生成、最终汇报
+- `game-asset-collector`：商店截图、视频抽帧、标签、描述
+- `game-review`：5 位评委 × 7 维度评审，输出 `docx` / `xlsx` / `md`
 
-Public repositories:
+对应仓库：
 
 - [game-ppt-master](https://github.com/k412407009/game-ppt-master)
 - [game-asset-collector](https://github.com/k412407009/game-asset-collector)
 - [game-review](https://github.com/k412407009/game-review)
 
-Recommended order:
+链路说明见：
 
-1. Clone `game-ppt-master`
-2. Clone `game-asset-collector`
-3. Clone `game-review`
+- [三仓协同架构](./docs/三仓协同架构_THREE_REPO_STACK.md)
+- [同事接入指南](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md)
+- [生态清单](./docs/生态清单_ECOSYSTEM_MANIFEST.json)
 
-Then read the full stack guide:
+## 文档入口
 
-- [Three-Repo Stack](./docs/三仓协同架构_THREE_REPO_STACK.md)
-- [Ecosystem Manifest](./docs/生态清单_ECOSYSTEM_MANIFEST.json)
+| 文档 | 说明 |
+|---|---|
+| [游戏向魔改说明](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md) | 说明这个仓库相对上游改了什么、保留了什么 |
+| [Windows 安装指南](./docs/zh/windows-installation.md) | Windows 用户安装步骤 |
+| [为什么选这套引擎](./docs/zh/why-ppt-master.md) | 和其他 AI PPT 工具的区别 |
+| [SKILL.md](./skills/ppt-master/SKILL.md) | 核心流程与规则 |
+| [三仓协同架构](./docs/三仓协同架构_THREE_REPO_STACK.md) | 三仓完整链路 |
+| [同事接入指南](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md) | 给同事看的下载、目录、API Key 说明 |
+| [游戏评审闭环](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | 从素材到评审报告再到 PPT 的闭环 |
+| [脚本与工具](./skills/ppt-master/scripts/README.md) | 所有脚本入口 |
+| [常见问题](./docs/zh/faq.md) | 模型选择、导出、排版等问题 |
 
----
+## 当前建议的使用顺序
 
-## Documentation
+### 只做 PPT
 
-| | Document | Description |
-|---|----------|-------------|
-| 🆚 | [Why This Engine](./docs/why-ppt-master.md) | How the upstream PPT engine compares to Gamma, Copilot, and other AI tools |
-| 🪟 | [Windows Installation](./docs/windows-installation.md) | Step-by-step setup guide for Windows users |
-| 📖 | [SKILL.md](./skills/ppt-master/SKILL.md) | Core workflow and rules |
-| 🎮 | [Game Customization Notes](./docs/游戏向魔改说明_GAME_CUSTOMIZATION_NOTES.md) | What changed from upstream `ppt-master`, what stayed compatible, and why this repo is named `game-ppt-master` |
-| 🤝 | [Team Onboarding](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md) | Shareable setup guide for colleagues: download links, API keys, local wiring, and first-run flow |
-| 🧭 | [Three-Repo Stack](./docs/三仓协同架构_THREE_REPO_STACK.md) | End-to-end architecture, clone layout, model/API boundaries, and full workflow |
-| 🧩 | [Ecosystem Manifest](./docs/生态清单_ECOSYSTEM_MANIFEST.json) | Machine-readable module manifest for `game-ppt-master` + `game-asset-collector` + `game-review` |
-| 🎯 | [Game Review Closed Loop](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | How `game-ppt-master` hands off assets and review JSON into `game-review` |
-| 📐 | [Canvas Formats](./skills/ppt-master/references/canvas-formats.md) | PPT 16:9, Xiaohongshu, WeChat, and 10+ formats |
-| 🛠️ | [Scripts & Tools](./skills/ppt-master/scripts/README.md) | All scripts and commands |
-| 💼 | [Examples](./examples/README.md) | 15 projects, 229 pages |
-| 🏗️ | [Technical Design](./docs/technical-design.md) | Architecture, design philosophy, why SVG |
-| ❓ | [FAQ](./docs/faq.md) | Model selection, cost, layout troubleshooting, custom templates |
+1. 安装依赖
+2. 打开仓库
+3. 让 AI 阅读 `skills/ppt-master/SKILL.md`
+4. 指定源文件
+5. 在 `exports/` 里查看结果
 
----
+### 做游戏素材和评审
 
-## Contributing
+1. 在 `game-asset-collector` 抓商店图和视频帧
+2. 在 `game-review` 生成结构化评审报告
+3. 再回到 `game-ppt-master` 做最终汇报 PPT
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get involved.
+## 反馈
 
-## License
+- 问题反馈：[/issues](https://github.com/k412407009/game-ppt-master/issues)
+- 仓库主页：[github.com/k412407009/game-ppt-master](https://github.com/k412407009/game-ppt-master)
+- 上游引擎：[github.com/hugohe3/ppt-master](https://github.com/hugohe3/ppt-master)
 
-[MIT](LICENSE)
+## 开源协议
 
-## Acknowledgments
-
-[SVG Repo](https://www.svgrepo.com/) · [Tabler Icons](https://github.com/tabler/tabler-icons) · [Robin Williams](https://en.wikipedia.org/wiki/Robin_Williams_(author)) (CRAP principles) · McKinsey, BCG, Bain
-
-## Contact & Collaboration
-
-Looking to collaborate, integrate Game PPT Master into your workflow, or just have questions?
-
-- 🐛 **Bug reports & feature requests** — [GitHub Issues](https://github.com/k412407009/game-ppt-master/issues)
-- 📦 **Repository home** — [github.com/k412407009/game-ppt-master](https://github.com/k412407009/game-ppt-master)
-- 🧱 **Upstream base engine** — [github.com/hugohe3/ppt-master](https://github.com/hugohe3/ppt-master)
-
----
-
-## Supported by DigitalOcean
-
-<p>This project is supported by:</p>
-<p>
-  <a href="https://m.do.co/c/547f129aabe1">
-    <img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/PoweredByDO/DO_Powered_by_Badge_blue.svg" alt="Powered by DigitalOcean" width="201" />
-  </a>
-</p>
-
-Made with ❤️ on top of [Hugo He's upstream engine](https://github.com/hugohe3/ppt-master)
-
-[⬆ Back to Top](#game-ppt-master--ai-generates-natively-editable-pptx-for-game-industry-decks)
+[MIT](./LICENSE)
