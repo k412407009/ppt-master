@@ -31,6 +31,8 @@ Inputs:
 Outputs (project mode):
   <project>/images/store/<game>/{appstore,googleplay,steam}/screenshot_*.jpg
   <project>/images/gameplay/<game>/<video_slug>/frame_*.jpg
+  <project>/images/gameplay/labels.json
+  <project>/images/gameplay/descriptions.json
   <project>/images/_game_assets_meta/<game>.metadata.json
   <project>/images/_game_assets_meta/<game>.image_resource_list.md
 """
@@ -47,6 +49,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 from datetime import datetime
+from difflib import SequenceMatcher
 from pathlib import Path
 
 # Force UTF-8 stdout/stderr so emoji + Chinese print work on Windows GBK terminals.
@@ -95,7 +98,7 @@ def _env(name: str, default: str = "") -> str:
 
 
 TAVILY_API_KEY = _env("TAVILY_API_KEY")
-ARK_API_KEY = _env("ARK_API_KEY")
+ARK_API_KEY = _env("ARK_API_KEY") or _env("VOLCENGINE_API_KEY")
 
 
 # ---------------------------------------------------------------------------
@@ -133,6 +136,98 @@ def _sanitize(name: str) -> str:
     """Convert game name into a filesystem-safe directory name (cross-platform)."""
     cleaned = re.sub(r'[<>:"/\\|?*\s]+', '-', name).strip('-')
     return cleaned[:80] or "unnamed"
+
+
+APPSTORE_GENERIC_TOKENS = {
+    "a", "an", "and", "app", "apps", "battle", "city", "day", "free", "fun",
+    "game", "games", "hero", "idle", "island", "last", "legend", "legends",
+    "mobile", "of", "online", "quest", "rpg", "sim", "simulator", "story",
+    "survival", "the", "tycoon", "war", "world",
+}
+
+
+def _title_tokens(text: str) -> list[str]:
+    return [tok for tok in re.split(r"[^a-z0-9]+", (text or "").lower()) if tok]
+
+
+def _core_title_tokens(text: str) -> set[str]:
+    return {
+        tok for tok in _title_tokens(text)
+        if len(tok) >= 2 and tok not in APPSTORE_GENERIC_TOKENS
+    }
+
+
+def _title_similarity(a: str, b: str) -> float:
+    left = "".join(_title_tokens(a))
+    right = "".join(_title_tokens(b))
+    if not left or not right:
+        return 0.0
+    return SequenceMatcher(None, left, right).ratio()
+
+
+def _select_appstore_candidate(game_name: str, results: list[dict]) -> tuple[dict | None, str]:
+    target_tokens = set(_title_tokens(game_name))
+    target_core = _core_title_tokens(game_name)
+    ranked = []
+
+    for app in results:
+        title = str(app.get("trackName") or app.get("trackCensoredName") or "")
+        if not title:
+            continue
+        title_tokens = set(_title_tokens(title))
+        title_core = _core_title_tokens(title)
+        bundle_core = _core_title_tokens(str(app.get("bundleId") or "").replace(".", " "))
+        overlap_all = len(target_tokens & title_tokens)
+        overlap_core = len(target_core & (title_core | bundle_core))
+        similarity = _title_similarity(game_name, title)
+        contains = int(bool(title and (
+            title.lower() in game_name.lower() or game_name.lower() in title.lower()
+        )))
+        score = similarity + (0.45 * overlap_core / max(len(target_core), 1)) + (0.12 * contains)
+        if target_core and overlap_core == 0:
+            score -= 0.30
+        ranked.append((score, similarity, overlap_core, overlap_all, app))
+
+    if not ranked:
+        return None, "no ranked candidates"
+
+    ranked.sort(key=lambda item: (item[0], item[1], item[2], item[3]), reverse=True)
+    best_score, best_similarity, best_core, best_all, best_app = ranked[0]
+    second_score = ranked[1][0] if len(ranked) > 1 else -1.0
+
+    if target_core:
+        confident = (
+            (best_core == len(target_core) and best_similarity >= 0.58)
+            or (best_core >= max(1, (len(target_core) + 1) // 2) and best_similarity >= 0.74)
+            or best_similarity >= 0.90
+        )
+    else:
+        confident = best_similarity >= 0.88 or (best_all >= max(1, len(target_tokens) - 1) and best_similarity >= 0.78)
+
+    if not confident:
+        return None, f"best candidate too weak (score={best_score:.2f}, similarity={best_similarity:.2f})"
+    if second_score >= best_score - 0.04 and best_score < 1.15:
+        return None, f"best candidate ambiguous (best={best_score:.2f}, second={second_score:.2f})"
+    return best_app, f"matched by title score={best_score:.2f}, similarity={best_similarity:.2f}"
+
+
+YOUTUBE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+BILIBILI_ID_RE = re.compile(r"^(BV[0-9A-Za-z]+)$", re.IGNORECASE)
+
+
+def _normalize_video_target(target: str) -> str:
+    """Normalize a user-supplied manual video target into a downloadable URL."""
+    target = target.strip()
+    if not target:
+        return target
+    if re.match(r"^https?://", target, re.IGNORECASE):
+        return target
+    if YOUTUBE_ID_RE.fullmatch(target):
+        return f"https://www.youtube.com/watch?v={target}"
+    m = BILIBILI_ID_RE.fullmatch(target)
+    if m:
+        return f"https://www.bilibili.com/video/{m.group(1)}"
+    return target
 
 
 def _run_cmd(cmd, timeout: int = 600):
@@ -181,14 +276,31 @@ def fetch_appstore(game_name: str, game_dir: Path, app_id: str = None) -> dict:
         url = f"https://itunes.apple.com/lookup?id={app_id}&country=us&entity=software"
     else:
         term = urllib.parse.quote(game_name)
-        url = f"https://itunes.apple.com/search?term={term}&entity=software&country=us&limit=5"
+        url = f"https://itunes.apple.com/search?term={term}&entity=software&country=us&limit=10"
 
     data = _json_get(url)
     if not data or data.get("resultCount", 0) == 0:
         print("   ⚠ App Store no result")
         return {}
 
-    app = data["results"][0]
+    results = data.get("results", [])
+    if app_id:
+        app = results[0]
+        match_reason = f"lookup by app_id={app_id}"
+    else:
+        app, match_reason = _select_appstore_candidate(game_name, results)
+        if not app:
+            preview = ", ".join(
+                str(item.get("trackName") or "").strip()
+                for item in results[:3]
+                if str(item.get("trackName") or "").strip()
+            ) or "(none)"
+            print(f"   ⚠ App Store search too fuzzy: {match_reason}")
+            print(f"   ↳ top candidates: {preview}")
+            print("   ↳ skip App Store; pass --appstore-id if you need an exact app")
+            return {}
+        print(f"   ✓ {match_reason}")
+
     info = {
         "source": "appstore",
         "trackName": app.get("trackName", ""),
@@ -447,7 +559,8 @@ def deduplicate_frames(frames_dir: Path, threshold: int = 8) -> int:
 def fetch_gameplay(game_name: str, game_dir: Path, max_videos: int = 3,
                    scene_threshold: float = 0.3, keep_video: bool = False,
                    smart: bool = True, frame_interval: int = 5,
-                   scene_mode: bool = False) -> dict:
+                   scene_mode: bool = False,
+                   manual_targets: list[str] | None = None) -> dict:
     """yt-dlp YouTube/Bilibili search → download → ffmpeg frame extraction.
 
     scene_mode=True : ffmpeg scene-detection (content-driven) + pHash dedup
@@ -466,38 +579,57 @@ def fetch_gameplay(game_name: str, game_dir: Path, max_videos: int = 3,
     video_dir.mkdir(parents=True, exist_ok=True)
     frames_dir.mkdir(parents=True, exist_ok=True)
 
-    # YouTube first
-    yt_query = f"ytsearch{max_videos}:{game_name} gameplay"
-    cmd = [
-        "yt-dlp", yt_query,
-        "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
-        "--merge-output-format", "mp4",
-        "-o", str(video_dir / "%(title).80s__%(id)s.%(ext)s"),
-        "--no-playlist",
-        "--socket-timeout", "30",
-        "--retries", "3",
-    ]
-    print("   downloading from YouTube...")
-    rc, output = _run_cmd(cmd, timeout=300)
-    if rc != 0:
-        print(f"   ⚠ yt-dlp returned {rc}")
-        if "command not found" in output or "command not" in output:
-            print("   ⚠ yt-dlp not installed. Install: pip install yt-dlp  (or `winget install yt-dlp`)")
-            return {}
+    output_template = str(video_dir / "%(title).80s__%(id)s.%(ext)s")
 
-    yt_videos = list(video_dir.glob("*.mp4"))
-    if len(yt_videos) < max_videos:
-        remaining = max_videos - len(yt_videos)
-        print(f"   filling with Bilibili (max {remaining})...")
-        bili_query = f"bilisearch{remaining}:{game_name} 实机 gameplay"
-        cmd_bili = [
-            "yt-dlp", bili_query,
+    def _run_yt_dlp(target: str, label: str) -> bool:
+        cmd = [
+            "yt-dlp", target,
             "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
             "--merge-output-format", "mp4",
-            "-o", str(video_dir / "bili_%(title).80s__%(id)s.%(ext)s"),
+            "-o", output_template,
             "--no-playlist", "--socket-timeout", "30", "--retries", "3",
         ]
-        _run_cmd(cmd_bili, timeout=300)
+        print(f"   downloading {label}...")
+        rc, output = _run_cmd(cmd, timeout=300)
+        if rc != 0:
+            print(f"   ⚠ yt-dlp returned {rc} for {target}")
+            if "command not found" in output or "command not" in output:
+                print("   ⚠ yt-dlp not installed. Install: pip install yt-dlp  (or `winget install yt-dlp`)")
+            else:
+                tail = output.strip().splitlines()[-3:]
+                if tail:
+                    print("   " + " | ".join(tail))
+            return False
+        return True
+
+    manual_targets = [t for t in (manual_targets or []) if t.strip()]
+    if manual_targets:
+        print(f"   manual video targets: {len(manual_targets)}")
+        for raw_target in manual_targets:
+            normalized = _normalize_video_target(raw_target)
+            label = "manual target"
+            if normalized != raw_target:
+                print(f"   normalize: {raw_target} -> {normalized}")
+            _run_yt_dlp(normalized, label)
+    else:
+        # YouTube first
+        yt_query = f"ytsearch{max_videos}:{game_name} gameplay"
+        _run_yt_dlp(yt_query, "from YouTube search")
+
+        yt_videos = list(video_dir.glob("*.mp4"))
+        if len(yt_videos) < max_videos:
+            remaining = max_videos - len(yt_videos)
+            print(f"   filling with Bilibili (max {remaining})...")
+            bili_query = f"bilisearch{remaining}:{game_name} 实机 gameplay"
+            bili_output_template = str(video_dir / "bili_%(title).80s__%(id)s.%(ext)s")
+            cmd_bili = [
+                "yt-dlp", bili_query,
+                "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
+                "--merge-output-format", "mp4",
+                "-o", bili_output_template,
+                "--no-playlist", "--socket-timeout", "30", "--retries", "3",
+            ]
+            _run_cmd(cmd_bili, timeout=300)
 
     all_videos = sorted(video_dir.glob("*.mp4"))
     if not all_videos:
@@ -614,14 +746,11 @@ def _get_image_info(img_path: Path):
 
 
 def _heuristic_label(img_path: Path):
-    w, h, size_kb = _get_image_info(img_path)
-    ratio = w / h if h > 0 else 1
+    _w, _h, size_kb = _get_image_info(img_path)
     if "store" in str(img_path):
         return "store-screenshot"
     if size_kb < 10:
         return "loading"
-    if ratio < 0.7:
-        return "ui-menu"
     return None
 
 
@@ -637,6 +766,45 @@ def _resize_for_vision(img_path: Path, max_px: int = 256) -> str:
     except ImportError:
         with open(img_path, "rb") as f:
             return base64.b64encode(f.read()).decode()
+
+
+def _default_description(rel: str, label: str) -> str:
+    rel_path = Path(rel)
+    parts = rel_path.parts
+    if "store" in parts:
+        platform = "store"
+        if len(parts) >= 2:
+            try:
+                idx = parts.index("store")
+                if idx + 1 < len(parts):
+                    platform = parts[idx + 1]
+            except ValueError:
+                pass
+        m = re.search(r"(\d+)", rel_path.stem)
+        if m:
+            return f"{platform} 商店截图 {int(m.group(1))}"
+        return f"{platform} 商店截图"
+    if label == "loading":
+        return "加载/转场画面"
+    return ""
+
+
+def _parse_label_desc(raw: str) -> tuple[str, str]:
+    text = raw.strip()
+    for fence in ("```json", "```JSON", "```"):
+        text = text.replace(fence, "")
+    text = text.strip().strip("`").strip()
+    try:
+        payload = json.loads(text)
+        label = str(payload.get("label", "other")).strip().lower()
+        desc = str(payload.get("desc", "")).strip()
+    except Exception:
+        lowered = text.lower()
+        label = next((c for c in LABEL_CATEGORIES if c in lowered), "other")
+        desc = text[:60]
+    if label not in LABEL_CATEGORIES:
+        label = "other"
+    return label, desc
 
 
 def label_frames(game_dir: Path, force: bool = False, model: str = None,
@@ -669,28 +837,40 @@ def label_frames(game_dir: Path, force: bool = False, model: str = None,
         return {}
 
     labels_path = game_dir / "gameplay" / "labels.json"
+    descriptions_path = game_dir / "gameplay" / "descriptions.json"
     existing_labels = {}
+    existing_descs = {}
     if labels_path.exists() and not force:
         try:
             existing_labels = json.loads(labels_path.read_text(encoding="utf-8"))
         except Exception:
             pass
+    if descriptions_path.exists() and not force:
+        try:
+            existing_descs = json.loads(descriptions_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
 
     heuristic_results = {}
+    heuristic_descs = {}
     for img_path in store_frames:
         rel = str(img_path.relative_to(game_dir))
         heuristic_results[rel] = "store-screenshot"
+        heuristic_descs[rel] = existing_descs.get(rel) or _default_description(rel, "store-screenshot")
 
     need_ai = []
     skipped = 0
     for img_path in all_frames:
         rel = str(img_path.relative_to(game_dir))
-        if rel in existing_labels and not force:
+        if rel in existing_labels and rel in existing_descs and existing_descs.get(rel) and not force:
             skipped += 1
             continue
         h_label = _heuristic_label(img_path)
         if h_label is not None:
             heuristic_results[rel] = h_label
+            desc = existing_descs.get(rel) or _default_description(rel, h_label)
+            if desc:
+                heuristic_descs[rel] = desc
         else:
             need_ai.append((rel, img_path))
 
@@ -736,6 +916,7 @@ def label_frames(game_dir: Path, force: bool = False, model: str = None,
 
     cats_str = ", ".join(LABEL_CATEGORIES)
     ai_labels = {}
+    ai_descs = {}
 
     if use_ai and smart:
         quota = dict(SCENE_QUOTA)
@@ -759,9 +940,14 @@ def label_frames(game_dir: Path, force: bool = False, model: str = None,
                      "image_url": {"url": f"data:image/jpeg;base64,{_resize_for_vision(img_path)}",
                                    "detail": "low"}},
                     {"type": "text",
-                     "text": f"Classify this game screenshot, return only the label name: {cats_str}"},
+                     "text": (
+                         "你在看一张手机游戏截图。严格只回答 JSON，格式："
+                         '{"label":"<分类>","desc":"<中文一句话描述, 不超过30字>"}。'
+                         f"label 只能从以下列表中选一个：{cats_str}。"
+                         "desc 要具体指出这是哪个玩法/界面/场景。"
+                     )},
                 ]}],
-                "max_tokens": 10,
+                "max_tokens": 120,
             }).encode()
             req = urllib.request.Request(
                 "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
@@ -772,17 +958,19 @@ def label_frames(game_dir: Path, force: bool = False, model: str = None,
             try:
                 resp = urllib.request.urlopen(req, timeout=30)
                 result = json.loads(resp.read().decode())
-                tag = result["choices"][0]["message"]["content"].strip().lower().strip('"').strip("'")
-                tag = tag if tag in LABEL_CATEGORIES else "other"
+                tag, desc = _parse_label_desc(result["choices"][0]["message"]["content"])
                 total_tokens += result.get("usage", {}).get("total_tokens", 0)
                 ai_calls += 1
             except Exception:
                 tag = "other"
+                desc = existing_descs.get(rel) or _default_description(rel, tag)
 
             mapped = tag if tag in quota else "other"
             if filled.get(mapped, 0) < quota.get(mapped, 0):
                 filled[mapped] = filled.get(mapped, 0) + 1
                 ai_labels[rel] = tag
+                if desc:
+                    ai_descs[rel] = desc
                 print(f" → {tag} ✓ ({filled[mapped]}/{quota[mapped]})")
             else:
                 print(f" → {tag} (quota full, drop)")
@@ -799,9 +987,14 @@ def label_frames(game_dir: Path, force: bool = False, model: str = None,
                      "image_url": {"url": f"data:image/jpeg;base64,{_resize_for_vision(img_path)}",
                                    "detail": "low"}},
                     {"type": "text",
-                     "text": f"Classify this game screenshot, return only the label name: {cats_str}"},
+                     "text": (
+                         "你在看一张手机游戏截图。严格只回答 JSON，格式："
+                         '{"label":"<分类>","desc":"<中文一句话描述, 不超过30字>"}。'
+                         f"label 只能从以下列表中选一个：{cats_str}。"
+                         "desc 要具体指出这是哪个玩法/界面/场景。"
+                     )},
                 ]}],
-                "max_tokens": 10,
+                "max_tokens": 120,
             }).encode()
             req = urllib.request.Request(
                 "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
@@ -812,27 +1005,41 @@ def label_frames(game_dir: Path, force: bool = False, model: str = None,
             try:
                 resp = urllib.request.urlopen(req, timeout=30)
                 result = json.loads(resp.read().decode())
-                tag = result["choices"][0]["message"]["content"].strip().lower().strip('"').strip("'")
-                tag = tag if tag in LABEL_CATEGORIES else "other"
+                tag, desc = _parse_label_desc(result["choices"][0]["message"]["content"])
                 total_tokens += result.get("usage", {}).get("total_tokens", 0)
                 ai_calls += 1
             except Exception:
-                tag = "gameplay"
+                tag = "other"
+                desc = existing_descs.get(rel) or _default_description(rel, tag)
             print(f" → {tag}")
             ai_labels[rel] = tag
+            if desc:
+                ai_descs[rel] = desc
             time.sleep(0.2)
     else:
-        for rel, img_path in need_ai:
-            ai_labels[rel] = "gameplay"
+        for rel, _img_path in need_ai:
+            ai_labels[rel] = existing_labels.get(rel, "other")
+            desc = existing_descs.get(rel) or _default_description(rel, ai_labels[rel])
+            if desc:
+                ai_descs[rel] = desc
 
     labels = {}
     labels.update(existing_labels)
     labels.update(heuristic_results)
     labels.update(ai_labels)
 
+    descriptions = {}
+    descriptions.update(existing_descs)
+    descriptions.update(heuristic_descs)
+    descriptions.update(ai_descs)
+    for rel in labels:
+        descriptions.setdefault(rel, "")
+
     labels_path.parent.mkdir(parents=True, exist_ok=True)
     labels_path.write_text(json.dumps(labels, ensure_ascii=False, indent=2),
                            encoding="utf-8")
+    descriptions_path.write_text(json.dumps(descriptions, ensure_ascii=False, indent=2),
+                                 encoding="utf-8")
     dist = _count_tags(labels)
     mode_str = ("smart-quota+AI" if (use_ai and smart)
                 else ("AI+heuristic" if use_ai else "heuristic"))
@@ -840,7 +1047,8 @@ def label_frames(game_dir: Path, force: bool = False, model: str = None,
     print(f"     AI calls: {ai_calls} | tokens: {total_tokens}")
     print(f"     distribution: {dist}")
     return {"total": len(labels), "distribution": dist, "mode": mode_str,
-            "ai_calls": ai_calls, "total_tokens": total_tokens}
+            "ai_calls": ai_calls, "total_tokens": total_tokens,
+            "descriptions_total": sum(1 for v in descriptions.values() if v)}
 
 
 def _count_tags(labels: dict) -> dict:
@@ -861,10 +1069,17 @@ def emit_resource_list(game_dir: Path, project_root: Path,
     rows = []
 
     labels_path = game_dir / "gameplay" / "labels.json"
+    descriptions_path = game_dir / "gameplay" / "descriptions.json"
     labels = {}
+    descriptions = {}
     if labels_path.exists():
         try:
             labels = json.loads(labels_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    if descriptions_path.exists():
+        try:
+            descriptions = json.loads(descriptions_path.read_text(encoding="utf-8"))
         except Exception:
             pass
 
@@ -886,6 +1101,12 @@ def emit_resource_list(game_dir: Path, project_root: Path,
                 rel_to_images = img.relative_to(images_root).as_posix()
             except ValueError:
                 rel_to_images = rel_to_game
+            note_parts = [game_name]
+            if label:
+                note_parts.append(label)
+            desc = descriptions.get(rel_to_game, "").strip()
+            if desc:
+                note_parts.append(desc)
             rows.append({
                 "filename": rel_to_images,
                 "dimensions": f"{w}x{h}" if w else "?",
@@ -893,7 +1114,7 @@ def emit_resource_list(game_dir: Path, project_root: Path,
                 "purpose": "(to fill)",
                 "type": "Photography",
                 "status": "Existing",
-                "notes": f"{game_name} / {label}" if label else game_name,
+                "notes": " / ".join(note_parts),
             })
 
     if not rows:
@@ -1017,6 +1238,13 @@ def main():
     parser.add_argument("--steam-id", help="Steam App ID")
     parser.add_argument("--max-videos", type=int, default=3,
                         help="max gameplay videos (default 3)")
+    parser.add_argument(
+        "--video",
+        action="append",
+        default=[],
+        metavar="URL_OR_ID",
+        help="manual gameplay video target (repeatable). Accepts full URL, YouTube ID, or Bilibili BV id. When set, skip auto-search.",
+    )
     parser.add_argument("--scene-threshold", type=float, default=0.3,
                         help="scene-detect threshold (default 0.3)")
 
@@ -1080,6 +1308,7 @@ def main():
                 smart=smart,
                 frame_interval=args.frame_interval,
                 scene_mode=scene_mode,
+                manual_targets=args.video,
             )
             metadata["gameplay"] = gp_meta
 

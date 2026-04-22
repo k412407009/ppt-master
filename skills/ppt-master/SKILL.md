@@ -241,7 +241,19 @@ python3 ${SKILL_DIR}/scripts/game_assets/fetch_game_assets.py "<game name>" \
     --max-videos 2 --label
 ```
 
-Outputs land in `<project_path>/images/_game_assets/<game>/` (frames, store shots, `labels.json`, `metadata.json`) and `<project_path>/images/_game_assets_meta/<game>.image_resource_list.md` (paste-ready Markdown table for `design_spec.md` §VIII).
+If auto-search finds the wrong gameplay clip, switch to a manual target:
+
+```bash
+python3 ${SKILL_DIR}/scripts/game_assets/fetch_game_assets.py "<game name>" \
+    --project <project_path> \
+    --video https://www.youtube.com/watch?v=<id> \
+    --video <bilibili_BV_id?> \
+    --label
+```
+
+If App Store name search is fuzzy, the collector now **skips instead of force-picking the first hit**. In that case, pass `--appstore-id` for an exact lookup.
+
+Outputs land in `<project_path>/images/_game_assets/<game>/` (frames, store shots, `labels.json`, `descriptions.json`, `metadata.json`) and `<project_path>/images/_game_assets_meta/<game>.image_resource_list.md` (paste-ready Markdown table for `design_spec.md` §VIII).
 
 **Closest-reference restyling** (when stores + videos don't cover a needed scene):
 ```bash

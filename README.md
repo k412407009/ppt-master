@@ -212,6 +212,7 @@ Run `python3 skills/ppt-master/scripts/image_gen.py --list-backends` to see tier
 | 🆚 | [Why PPT Master](./docs/why-ppt-master.md) | How it compares to Gamma, Copilot, and other AI tools |
 | 🪟 | [Windows Installation](./docs/windows-installation.md) | Step-by-step setup guide for Windows users |
 | 📖 | [SKILL.md](./skills/ppt-master/SKILL.md) | Core workflow and rules |
+| 🎮 | [Game Review Closed Loop](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | How `ppt-master` hands off assets and review JSON into `game-review` |
 | 📐 | [Canvas Formats](./skills/ppt-master/references/canvas-formats.md) | PPT 16:9, Xiaohongshu, WeChat, and 10+ formats |
 | 🛠️ | [Scripts & Tools](./skills/ppt-master/scripts/README.md) | All scripts and commands |
 | 💼 | [Examples](./examples/README.md) | 15 projects, 229 pages |

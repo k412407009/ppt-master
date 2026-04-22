@@ -32,6 +32,10 @@ the Strategist's `design_spec.md` §VIII can adopt verbatim.
 - For each game: optional Steam App ID, App Store ID, Google Play package
   name (sharply improves accuracy when known).
 
+> App Store note: title search now uses a **strict candidate filter**. If the
+> best hit is fuzzy, the collector skips App Store entirely instead of force-
+> picking result #1. When you know the exact app, prefer `--appstore-id`.
+
 ## Decision tree (executed once per game)
 
 ```
@@ -63,6 +67,16 @@ python ${SKILL_DIR}/scripts/game_assets/fetch_game_assets.py "<game name>" \
     --max-videos 2  --label
 ```
 
+If auto-search finds the wrong clip, switch to manual video input:
+
+```bash
+python ${SKILL_DIR}/scripts/game_assets/fetch_game_assets.py "<game name>" \
+    --project <project_path> \
+    --video https://www.youtube.com/watch?v=<id> \
+    --video <bilibili_BV_id?> \
+    --label
+```
+
 This populates:
 
 ```
@@ -70,6 +84,7 @@ This populates:
   ├── store/{appstore,googleplay,steam}/screenshot_*.jpg + icon.png
   ├── gameplay/frames/<video_slug>/frame_*.jpg  (≤ 15 after smart-quota)
   ├── gameplay/labels.json                       (12-class taxonomy)
+  ├── gameplay/descriptions.json                 (Chinese one-line frame descriptions)
   └── metadata.json
 <project>/images/_game_assets_meta/
   └── <sanitized_game>.image_resource_list.md   (paste-ready)
