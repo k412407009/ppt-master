@@ -240,6 +240,7 @@ Then read the full stack guide:
 | 🆚 | [Why PPT Master](./docs/why-ppt-master.md) | How it compares to Gamma, Copilot, and other AI tools |
 | 🪟 | [Windows Installation](./docs/windows-installation.md) | Step-by-step setup guide for Windows users |
 | 📖 | [SKILL.md](./skills/ppt-master/SKILL.md) | Core workflow and rules |
+| 🤝 | [Team Onboarding](./docs/同事接入指南_TEAM_ONBOARDING_GUIDE.md) | Shareable setup guide for colleagues: download links, API keys, local wiring, and first-run flow |
 | 🧭 | [Three-Repo Stack](./docs/三仓协同架构_THREE_REPO_STACK.md) | End-to-end architecture, clone layout, model/API boundaries, and full workflow |
 | 🧩 | [Ecosystem Manifest](./docs/生态清单_ECOSYSTEM_MANIFEST.json) | Machine-readable module manifest for `ppt-master` + `game-asset-collector` + `game-review` |
 | 🎮 | [Game Review Closed Loop](./docs/游戏评审闭环_GAME_REVIEW_CLOSED_LOOP.md) | How `ppt-master` hands off assets and review JSON into `game-review` |
