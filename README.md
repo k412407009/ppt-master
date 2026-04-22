@@ -214,6 +214,12 @@ If you want the complete local workflow instead of the PPT-only path, clone thes
   game-review/            # structured review report generation
 ```
 
+Public repositories:
+
+- [ppt-master](https://github.com/k412407009/ppt-master)
+- [game-asset-collector](https://github.com/k412407009/game-asset-collector)
+- [game-review](https://github.com/k412407009/game-review)
+
 Recommended order:
 
 1. Clone `ppt-master`

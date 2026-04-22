@@ -36,6 +36,12 @@ flowchart LR
 
 ## 三个仓分别负责什么
 
+| 仓库 | 公开地址 | 角色 |
+| --- | --- | --- |
+| `ppt-master` | [github.com/k412407009/ppt-master](https://github.com/k412407009/ppt-master) | 主工作流与 PPT 生成 |
+| `game-asset-collector` | [github.com/k412407009/game-asset-collector](https://github.com/k412407009/game-asset-collector) | 共享素材采集器 |
+| `game-review` | [github.com/k412407009/game-review](https://github.com/k412407009/game-review) | 结构化评审模块 |
+
 ### 1. `ppt-master`
 
 主仓库，负责：
@@ -194,6 +200,15 @@ flowchart TD
   ppt-master/
   game-asset-collector/
   game-review/
+```
+
+一键 clone 的最小命令：
+
+```bash
+cd ~/Desktop/Git
+git clone https://github.com/k412407009/ppt-master.git
+git clone https://github.com/k412407009/game-asset-collector.git
+git clone https://github.com/k412407009/game-review.git
 ```
 
 这样 3 个仓之间的桥接逻辑可以直接工作，不需要你手动改路径。
