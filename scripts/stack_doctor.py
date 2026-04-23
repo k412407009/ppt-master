@@ -48,6 +48,18 @@ def _merged_env() -> dict[str, str]:
     return merged
 
 
+def _find_env(env: dict[str, str], name: str) -> tuple[str, str | None]:
+    direct = env.get(name, "").strip()
+    if direct:
+        return direct, name
+    target = name.lower()
+    for key, value in env.items():
+        value = value.strip()
+        if value and key.lower() == target:
+            return value, key
+    return "", None
+
+
 def _status_line(status: str, label: str, detail: str) -> None:
     print(f"[{status}] {label}: {detail}")
 
@@ -145,8 +157,12 @@ def main() -> int:
         ("ARK_API_KEY", "视觉标签/中文描述"),
         ("COMPASS_API_KEY", "评审模型"),
     ):
-        if env.get(key):
-            _status_line("OK", key, f"已配置（{label}）")
+        value, source = _find_env(env, key)
+        if value:
+            detail = f"已配置（{label}）"
+            if source and source != key:
+                detail += f"；当前通过 `{source}` 读取，建议以后统一写成 `{key}`"
+            _status_line("OK", key, detail)
         else:
             _status_line("WARN", key, f"未配置（{label}会降级或不可用）")
             warnings.append(f"未配置 {key}")

@@ -123,6 +123,11 @@ git clone https://github.com/k412407009/game-review.git
 | `ARK_API_KEY` | ARK / Doubao Vision 打标和中文描述 | 建议配置 |
 | `VOLCENGINE_API_KEY` | `ARK_API_KEY` 的别名，也可直接用 | 二选一 |
 
+补充说明：
+
+- Tavily 现在兼容历史写法 `Tavily_API_Key` / `Tavily_API_KEY`
+- 但团队内统一建议还是写成 `TAVILY_API_KEY`，这样体检脚本和排障说明最不容易误会
+
 火山引擎在这里的作用主要是视觉识别，不是主评审模型。
 
 ### D. `game-review` 直接调用的 API
@@ -216,6 +221,8 @@ COMPASS_API_KEY=...
 IMAGE_BACKEND=volcengine
 VOLCENGINE_API_KEY=...
 ```
+
+如果你本地已经是旧写法 `Tavily_API_Key=...`，现在也能识别；只是建议后续统一改成全大写。
 
 说明：
 
